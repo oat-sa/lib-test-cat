@@ -1,0 +1,34 @@
+{
+	"name": "oat-sa/lib-test-cat",
+	"description": "Library to connect the taoTests engine to a computer adaptive test",
+	"type": "library",
+	"authors": [
+		{
+			"name": "Open Assessment Technologies S.A.",
+			"homepage": "http://www.taotesting.com"
+		},
+		{
+			"name": "Joel Bout",
+			"email": "joel@taotesting.com",
+			"homepage": "http://www.taotesting.com",
+			"role": "Developer"
+		}
+	],
+	"support": {
+		"forum": "http://forum.taotesting.com",
+		"issues": "http://forge.taotesting.com"
+	},
+	"keywords" : ["OAT", "TAO","computer-based-assessment"],
+	"homepage" : "http://www.taotesting.com",
+	"license" : [
+		"GPL-2.0"
+	],
+	"require" : {
+		"php" : ">=5.3.10",
+	},
+    "autoload" : {
+        "psr-4" : {
+            "oat\\libCat\\" : "src/"
+        }
+    }
+}

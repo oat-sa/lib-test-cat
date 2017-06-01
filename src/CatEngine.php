@@ -37,6 +37,7 @@ interface CatEngine
      * @param StreamInterface $configuration
      * @param StreamInterface $qtiUsageData
      * @param StreamInterface $qtiMetaData
+     * @return CatSection
      */
     public function setupSection($configuration, $qtiUsageData = null, $qtiMetaData = null);
     

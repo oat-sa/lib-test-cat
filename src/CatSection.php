@@ -31,7 +31,7 @@ interface CatSection extends \JsonSerializable
      * @param unknown $config
      * @return CatSession
      */
-    public function initSession($config);
+    public function initSession($priorData = null);
     
     /**
      * 

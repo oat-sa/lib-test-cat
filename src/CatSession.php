@@ -32,7 +32,7 @@ interface CatSession extends \JsonSerializable
      *
      * @param unknown $results
      */
-    public function getTestMap($results);
+    public function getTestMap($results = []);
     
     /**
      * Returns testresults provided by the engine

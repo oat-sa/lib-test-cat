@@ -33,11 +33,14 @@ class RandomSession implements CatSession
 
     public function getTestMap($results = [])
     {
-        $output = array_rand($this->data, rand(1, count($this->data)));
+        $output = array_rand($this->data, rand(2, count($this->data)));
         if(!is_array($output)){
             return [$output];
         }
-        return $output;
+        shuffle($output);
+        return array_map(function($index){
+            return $this->data[$index];
+        }, $output);
     }
     
     /**

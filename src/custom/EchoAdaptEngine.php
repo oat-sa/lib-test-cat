@@ -31,7 +31,7 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * Interface to describe the interaction between the testrunner and the adaptive engine
  *
- * @author Joel Bout, <joel.bout@tudor.lu>
+ * @author Joel Bout, <joel@taotesting.com>
  */
 class EchoAdaptEngine implements CatEngine
 {
@@ -39,16 +39,28 @@ class EchoAdaptEngine implements CatEngine
     
     private $endpoint;
     
+    /**
+     * Setup the EchoAdaptEngine
+     *
+     * @param string $endpoint URL of the service
+     */
     public function __construct($endpoint) {
         $this->endpoint = rtrim($endpoint, '/');
     }
     
-    
+    /**
+     * (non-PHPdoc)
+     * @see \oat\libCat\CatEngine::setupSection()
+     */
     public function setupSection($configuration, $qtiUsageData = null, $qtiMetaData = null)
     {
         return new EchoAdaptSection($this, $configuration);
     }
     
+    /**
+     * (non-PHPdoc)
+     * @see \oat\libCat\CatEngine::restoreSection()
+     */
     public function restoreSection($jsonString)
     {
         $identifier = json_decode($jsonString);
@@ -59,8 +71,10 @@ class EchoAdaptEngine implements CatEngine
     }
     
     /**
+     * Helper to facilitate calls to the server
      * 
      * @param string $url
+     * @param string $method
      * @param array $data
      * @return array
      */
@@ -77,27 +91,26 @@ class EchoAdaptEngine implements CatEngine
         return $response;
     }
     
+    /**
+     * Function that handles communication and timeouts
+     *
+     * @param RequestInterface $request
+     * @return mixed
+     */
     private function send(RequestInterface $request) {
     
-        try {
+//        try {
             $response = $this->getClient()->send($request);
-        } catch(RequestException $e) {
-            $response = $e->getResponse();
-    
-            $iteration++;
-            $canReplay = null;
-            if ($response instanceof ResponseInterface) {
-                $this->triggerCommunicationEvent(FailedRequestEvent::class, $request, $response );
-                $canReplay = $this->canReplay($response, $request, $iteration);
-            } else {
-                \common_Logger::e('Incorrect response from ' . (string)$request->getUri());
-            }
-            return $canReplay;
-        }
+//        } catch(RequestException $e) {
+//            $response = $e->getResponse();
+//        }
     
         return json_decode($response->getBody()->getContents(), true );
     }
     
+    /**
+     * @return \GuzzleHttp\Client
+     */
     private function getClient() {
         return new Client();
     }

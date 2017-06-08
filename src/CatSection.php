@@ -20,15 +20,18 @@
 namespace oat\libCat;
 
 /**
- * Interface to describe the interaction between the testrunner and the adaptive engine
+ * Interface to describe an adaptive section within a test
  *
- * @author Joel Bout, <joel.bout@tudor.lu>
+ * @author Joel Bout, <joel@taotesting.com>
  */
 interface CatSection extends \JsonSerializable
 {
     /**
+     * Initialize a session for an adaptive section.
+     * The priorData data format is implementation
+     * specific and not covered by the standard.
      * 
-     * @param unknown $config
+     * @param mixed $priorData
      * @return CatSession
      */
     public function initSession($priorData = null);

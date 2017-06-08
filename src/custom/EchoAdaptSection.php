@@ -24,7 +24,7 @@ use function GuzzleHttp\json_decode;
 /**
  * Interface to describe the interaction between the testrunner and the adaptive engine
  *
- * @author Joel Bout, <joel.bout@tudor.lu>
+ * @author Joel Bout, <joel@taotesting.com>
  */
 class EchoAdaptSection implements CatSection
 {

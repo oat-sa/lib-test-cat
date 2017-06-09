@@ -37,6 +37,7 @@ interface CatSection extends \JsonSerializable
     public function initSession($priorData = null);
     
     /**
+     * Restore a serialised session of the current section
      * 
      * @param string $jsonString
      * @return CatSession

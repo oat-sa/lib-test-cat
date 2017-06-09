@@ -30,7 +30,10 @@ interface CatSession extends \JsonSerializable
 {
     /**
      * Returns the item reference ids of the next items to present
-     * to the Testtaker for a given session and given results
+     * to the Testtaker for a given session and given results.
+     *
+     * This can modify the internal state of the session and requires
+     * the session to be reserialized
      *
      * @param ItemResult $results
      * @return string[]
@@ -39,6 +42,8 @@ interface CatSession extends \JsonSerializable
     
     /**
      * Returns testresults provided by the engine
+     * Result ids might not be unique across the test
+     *
      * @return ResultVariable
      */
     public function getResults();

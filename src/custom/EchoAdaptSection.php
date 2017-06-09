@@ -22,7 +22,7 @@ namespace oat\libCat\custom;
 use oat\libCat\CatSection;
 use function GuzzleHttp\json_decode;
 /**
- * Interface to describe the interaction between the testrunner and the adaptive engine
+ * Implementation of an EchoAdapt section
  *
  * @author Joel Bout, <joel@taotesting.com>
  */

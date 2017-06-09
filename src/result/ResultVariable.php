@@ -50,6 +50,13 @@ class ResultVariable implements \JsonSerializable
         return new static($array["identifier"], $value['baseType'], $values);
     }
     
+    /**
+     * Create a new ResultVariable
+     *
+     * @param string $identifier
+     * @param string $type
+     * @param mixed $value
+     */
     public function __construct($identifier, $type, $value)
     {
         $this->identifier = $identifier;

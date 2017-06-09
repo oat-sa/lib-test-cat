@@ -29,7 +29,7 @@ use GuzzleHttp\Client;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 /**
- * Interface to describe the interaction between the testrunner and the adaptive engine
+ * Implementation of the EchoAdapt engine
  *
  * @author Joel Bout, <joel@taotesting.com>
  */

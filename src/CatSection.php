@@ -19,36 +19,28 @@
 
 namespace oat\libCat;
 
-use Psr\Http\Message\StreamInterface;
 /**
- * Interface to describe the interaction between the testrunner and the adaptive engine
+ * Interface to describe an adaptive section within a test
  *
  * @author Joel Bout, <joel@taotesting.com>
  */
-interface CatEngine
+interface CatSection extends \JsonSerializable
 {
     /**
-     * Setups an engine using
-     *   adaptiveEngineRef
-     *   adaptiveConfigurationRef
-     *   qtiUsagedataRef
-     *   qtiMetadataRef
-     * provided by the test section definition.
+     * Initialize a session for an adaptive section.
+     * The priorData data format is implementation
+     * specific and not covered by the standard.
      * 
-     * adaptiveEngineRef will be used to select the CatEngine
-     *
-     * @param StreamInterface $configuration
-     * @param StreamInterface $qtiUsageData
-     * @param StreamInterface $qtiMetaData
-     * @return CatSection
+     * @param mixed $priorData
+     * @return CatSession
      */
-    public function setupSection($configuration, $qtiUsageData = null, $qtiMetaData = null);
+    public function initSession($priorData = null);
     
     /**
-     * Restores a section from the jsonString
+     * Restore a serialised session of the current section
      * 
      * @param string $jsonString
-     * @return CatSection
+     * @return CatSession
      */
-    public function restoreSection($jsonString);
+    public function restoreSession($jsonString);
 }

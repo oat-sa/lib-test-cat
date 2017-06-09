@@ -23,7 +23,7 @@ use Psr\Http\Message\StreamInterface;
 /**
  * Interface to describe the interaction between the testrunner and the adaptive engine
  *
- * @author Joel Bout, <joel.bout@tudor.lu>
+ * @author Joel Bout, <joel@taotesting.com>
  */
 interface CatEngine
 {
@@ -33,6 +33,9 @@ interface CatEngine
      *   adaptiveConfigurationRef
      *   qtiUsagedataRef
      *   qtiMetadataRef
+     * provided by the test section definition.
+     * 
+     * adaptiveEngineRef will be used to select the CatEngine
      *
      * @param StreamInterface $configuration
      * @param StreamInterface $qtiUsageData

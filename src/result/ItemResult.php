@@ -20,14 +20,21 @@
 namespace oat\libCat\result;
 
 /**
- * Result Json Serialiser
- *
- * @author Joel Bout, <joel.bout@tudor.lu>
+ * Data object that regroups all result variables (response, outcome, template)
+ * for a given item
+ * 
+ * @author Joel Bout, <joel@taotesting.com>
  */
 class ItemResult implements \JsonSerializable
 {
+    /**
+     * @var string
+     */
     private $itemRefId;
     
+    /**
+     * @var ResultVariable[]
+     */
     private $variables;
     
     public function __construct($itemRefId, $variables)
@@ -35,7 +42,29 @@ class ItemResult implements \JsonSerializable
         $this->itemRefId = $itemRefId;
         $this->variables = is_array($variables) ? $variables : [$variables];
     }
+    
+    /**
+     * Returns the item reference id
+     * @return string
+     */
+    public function getItemRefId()
+    {
+        return $this->itemRefId;
+    }
+    
+    /**
+     * Returns the variables of the item
+     * @return ResultVariable[]
+     */
+    public function getVariables()
+    {
+        return $this->variables;
+    }
 
+    /**
+     * (non-PHPdoc)
+     * @see JsonSerializable::jsonSerialize()
+     */
     public function jsonSerialize()
     {
         return [

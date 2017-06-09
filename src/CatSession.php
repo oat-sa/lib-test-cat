@@ -19,23 +19,32 @@
 
 namespace oat\libCat;
 
+use oat\libCat\result\ResultVariable;
+use oat\libCat\result\ItemResult;
 /**
- * Interface to describe the interaction between the testrunner and the adaptive engine
+ * Interface to describe a test taker session for a given section 
  *
- * @author Joel Bout, <joel.bout@tudor.lu>
+ * @author Joel Bout, <joel@taotesting.com>
  */
 interface CatSession extends \JsonSerializable
 {
     /**
-     * Returns the internal ids of the next itemreferences to present
-     * to the Testtaker for a given session and given results
+     * Returns the item reference ids of the next items to present
+     * to the Testtaker for a given session and given results.
      *
-     * @param unknown $results
+     * This can modify the internal state of the session and requires
+     * the session to be reserialized
+     *
+     * @param ItemResult $results
+     * @return string[]
      */
     public function getTestMap($results = []);
     
     /**
      * Returns testresults provided by the engine
+     * Result ids might not be unique across the test
+     *
+     * @return ResultVariable
      */
     public function getResults();
 }

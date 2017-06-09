@@ -21,10 +21,11 @@ namespace oat\libCat\custom;
 
 use oat\libCat\CatSession;
 use oat\libCat\result\ResultVariable;
+use oat\libCat\result\ItemResult;
 /**
- * Interface to describe the interaction between the testrunner and the adaptive engine
+ * Implementation of the Echoadapt session
  *
- * @author Joel Bout, <joel.bout@tudor.lu>
+ * @author Joel Bout, <joel@taotesting.com>
  */
 class EchoAdaptSession implements CatSession
 {
@@ -56,13 +57,17 @@ class EchoAdaptSession implements CatSession
         $this->sessionState = $sessionState;
     }
     
+    /**
+     * (non-PHPdoc)
+     * @see \oat\libCat\CatSession::getTestMap()
+     */
     public function getTestMap($results = [])
     {
         if (!empty($results)) {
             $data = $this->engine->call(
                 'tests/'.$this->sectionId.'/test_taker_sessions/'.$this->testTakerSessionId.'/results',
                 'POST',
-                ["results" => $results,"sessionState" => $this->sessionState]
+                ["results" => $this->filterResults($results),"sessionState" => $this->sessionState]
             );
             $this->nextItems = $data['nextItems'];
             $this->numberOfItemsInNextStage = $data['numberOfItemsInNextStage'];
@@ -74,20 +79,27 @@ class EchoAdaptSession implements CatSession
     }
     
     /**
-     * Returns testresults provided by the engine
-    */
+     * (non-PHPdoc)
+     * @see \oat\libCat\CatSession::getResults()
+     */
     public function getResults()
     {
         $variables = [];
         $variableTypes = ["templateVariables", "responseVariables", "outcomeVariables"];
         foreach ($variableTypes as $varType) {
-            foreach ($this->assesmentResult['testResult'][$varType] as $variable) {
-                $variables[] = ResultVariable::restore($variable);
+            if (isset($this->assesmentResult['testResult'][$varType])) {
+                foreach ($this->assesmentResult['testResult'][$varType] as $variable) {
+                    $variables[] = ResultVariable::restore($variable);
+                }
             }
         }
         return $variables;
     }
     
+    /**
+     * (non-PHPdoc)
+     * @see JsonSerializable::jsonSerialize()
+     */
     public function jsonSerialize()
     {
         return [
@@ -98,5 +110,25 @@ class EchoAdaptSession implements CatSession
             'assesmentResult' => $this->assesmentResult,
             'sessionState' => $this->sessionState
         ];
+    }
+
+    /**
+     * filter out non 'score' variables
+     *
+     * @param ItemResult[] $results
+     * @return ItemResult[]
+     */
+    private function filterResults($results)
+    {
+        foreach ($results as $key => $result) {
+            $scoreOnly = [];
+            foreach ($result->getVariables() as $variable) {
+                if (strtolower($variable->getId()) == 'score') {
+                    $scoreOnly[] = $variable;
+                }
+            }
+            $results[$key] = new ItemResult($result->getItemRefId(), $scoreOnly);
+        }
+        return $results;
     }
 }

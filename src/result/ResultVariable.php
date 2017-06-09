@@ -20,9 +20,9 @@
 namespace oat\libCat\result;
 
 /**
- * Result Json Serialiser
+ * Dataobject to represent a single variable
  *
- * @author Joel Bout, <joel.bout@tudor.lu>
+ * @author Joel Bout, <joel@taotesting.com>
  */
 class ResultVariable implements \JsonSerializable
 {
@@ -32,6 +32,12 @@ class ResultVariable implements \JsonSerializable
     
     private $value;
     
+    /**
+     * Create a Resultvariable from the json array
+     * 
+     * @param array $array
+     * @return \oat\libCat\result\ResultVariable
+     */
     public static function restore($array)
     {
         $values = [];
@@ -44,6 +50,13 @@ class ResultVariable implements \JsonSerializable
         return new static($array["identifier"], $value['baseType'], $values);
     }
     
+    /**
+     * Create a new ResultVariable
+     *
+     * @param string $identifier
+     * @param string $type
+     * @param mixed $value
+     */
     public function __construct($identifier, $type, $value)
     {
         $this->identifier = $identifier;
@@ -51,16 +64,28 @@ class ResultVariable implements \JsonSerializable
         $this->value = $value;
     }
 
+    /**
+     * Returns the variable identifier
+     * @return string
+     */
     public function getId()
     {
         return $this->identifier;
     }
 
+    /**
+     * Returns the variable value(s)
+     * @return mixed
+     */
     public function getValue()
     {
         return $this->value;
     }
 
+    /**
+     * (non-PHPdoc)
+     * @see JsonSerializable::jsonSerialize()
+     */
     public function jsonSerialize()
     {
         $values = is_array($this->value) ? $this->value : [$this->value];

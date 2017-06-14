@@ -85,8 +85,6 @@ class EchoAdaptEngine implements CatEngine
             $body = stream_for(json_encode($data));
             $request = $request->withBody($body)->withAddedHeader('Content-Type', 'application/json');
         }
-        
-        \common_Logger::d('Call to '.$request->getUri());
         $response = $this->send($request);
         return $response;
     }

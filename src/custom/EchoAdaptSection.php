@@ -88,4 +88,9 @@ class EchoAdaptSection implements CatSection
     {
         return $this->sectionId;
     }
+    
+    public function getSectionId()
+    {
+        return $this->sectionId;
+    }
 }

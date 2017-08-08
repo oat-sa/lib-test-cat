@@ -111,6 +111,30 @@ class EchoAdaptSession implements CatSession
             'sessionState' => $this->sessionState
         ];
     }
+    
+    /**
+     * Get Section Identifier.
+     * 
+     * Returns the identifier of section the Echo Adapt session is related to.
+     * 
+     * @return string
+     */
+    public function getSectionId()
+    {
+        return $this->sectionId;
+    }
+    
+    /**
+     * Get Test Taker Session Identifier.
+     * 
+     * Returns the unique identifier representing both the Echo Adapt session and the test taker taking the session.
+     * 
+     * @return string
+     */
+    public function getTestTakerSessionId()
+    {
+        return $this->testTakerSessionId;
+    }
 
     /**
      * filter out non 'score' variables

@@ -47,4 +47,22 @@ interface CatSession extends \JsonSerializable
      * @return ResultVariable
      */
     public function getResults();
+    
+    /**
+     * Get Section Identifier.
+     * 
+     * Returns the identifier of section the adaptive session is related to.
+     * 
+     * @return string
+     */
+    public function getSectionId();
+    
+    /**
+     * Get Test Taker Session Identifier.
+     * 
+     * Returns the unique identifier representing both the adaptive session and the test taker taking the session.
+     * 
+     * @return string
+     */
+    public function getTestTakerSessionId();
 }

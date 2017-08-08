@@ -43,4 +43,13 @@ interface CatSection extends \JsonSerializable
      * @return CatSession
      */
     public function restoreSession($jsonString);
+    
+    /**
+     * Get Section Identifier.
+     * 
+     * Returns the identifier of the section.
+     * 
+     * @return string
+     */
+    public function getSectionId();
 }

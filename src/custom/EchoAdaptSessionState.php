@@ -48,7 +48,7 @@ class EchoAdaptSessionState implements CatSessionState
      */
     public function getPreviouslySeenItems()
     {
-        $this->getDecodedState()['previouslySeenItems'];
+        return $this->getDecodedState()['previouslySeenItems'];
     }
 
     /**
@@ -56,7 +56,7 @@ class EchoAdaptSessionState implements CatSessionState
      */
     public function getNextItems()
     {
-        $this->getDecodedState()['nextItems'];
+        return $this->getDecodedState()['nextItems'];
     }
 
     /**
@@ -64,7 +64,7 @@ class EchoAdaptSessionState implements CatSessionState
      */
     public function getShadowTest()
     {
-        $this->getDecodedState()['shadowTest'];
+        return $this->getDecodedState()['shadowTest'];
     }
 
     /**
@@ -72,7 +72,7 @@ class EchoAdaptSessionState implements CatSessionState
      */
     public function getItemScores()
     {
-        $this->getDecodedState()['itemScores'];
+        return $this->getDecodedState()['itemScores'];
     }
 
     /**

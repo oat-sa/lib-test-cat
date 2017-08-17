@@ -22,6 +22,7 @@ namespace oat\libCat\custom;
 use oat\libCat\CatSession;
 use oat\libCat\result\ResultVariable;
 use oat\libCat\result\ItemResult;
+
 /**
  * Implementation of the Echoadapt session
  *
@@ -54,7 +55,7 @@ class EchoAdaptSession implements CatSession
         $this->numberOfItemsInNextStage = $numberOfItemsInNextStage;
         $this->linear = $linear;
         $this->assesmentResult = $assesmentResult;
-        $this->sessionState = $sessionState;
+        $this->sessionState = new EchoAdaptSessionState($sessionState);
     }
     
     /**
@@ -73,7 +74,7 @@ class EchoAdaptSession implements CatSession
             $this->numberOfItemsInNextStage = $data['numberOfItemsInNextStage'];
             $this->linear = $data['linear'];
             $this->assesmentResult = $data['assesmentResult'];
-            $this->sessionState = $data['sessionState'];
+            $this->sessionState = new EchoAdaptSessionState($data['sessionState']);
         }
         return $this->nextItems;
     }
@@ -122,6 +123,14 @@ class EchoAdaptSession implements CatSession
     public function getTestTakerSessionId()
     {
         return $this->testTakerSessionId;
+    }
+
+    /**
+     * @return EchoAdaptSessionState
+     */
+    public function getSessionState()
+    {
+        return $this->sessionState;
     }
 
     /**

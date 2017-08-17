@@ -56,4 +56,11 @@ interface CatSession extends \JsonSerializable
      * @return string
      */
     public function getTestTakerSessionId();
+
+    /**
+     * Get test session state instance
+     *
+     * @return CatSessionState
+     */
+    public function getSessionState();
 }

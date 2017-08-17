@@ -29,6 +29,7 @@ use oat\libCat\result\ItemResult;
  */
 class EchoAdaptSession implements CatSession
 {
+    /** @var  EchoAdaptEngine */
     private $engine;
     
     private $sectionId;
@@ -69,6 +70,7 @@ class EchoAdaptSession implements CatSession
                 'POST',
                 ["results" => $this->filterResults($results),"sessionState" => $this->sessionState]
             );
+
             $this->nextItems = $data['nextItems'];
             $this->numberOfItemsInNextStage = $data['numberOfItemsInNextStage'];
             $this->linear = $data['linear'];

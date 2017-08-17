@@ -20,34 +20,47 @@
 namespace oat\libCat\custom;
 
 use oat\libCat\CatEngine;
-use GuzzleHttp\Psr7\Request;
-use function GuzzleHttp\json_decode;
-use function GuzzleHttp\json_encode;
-use GuzzleHttp\Psr7\Stream;
-use function GuzzleHttp\Psr7\stream_for;
-use GuzzleHttp\Client;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
+use oat\oatbox\service\ServiceManager;
+use oat\taoOauth\model\connector\Connector;
+use oat\taoOauth\model\connector\ConnectorFactory;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+use Zend\ServiceManager\ServiceLocatorAwareTrait;
+
 /**
  * Implementation of the EchoAdapt engine
  *
  * @author Joel Bout, <joel@taotesting.com>
  */
-class EchoAdaptEngine implements CatEngine
+class EchoAdaptEngine implements CatEngine, ServiceLocatorAwareInterface
 {
-    const ENGINE_VERSION = 'v1';
-    
-    private $endpoint;
-    
+    use ServiceLocatorAwareTrait;
+
+    const ENGINE_VERSION_1 = 'v1';
+    const ENGINE_VERSION_1_1 = 'v1.1';
+
+    const OPTION_CONNECTOR_VERSION = 'version';
+
+    /** @var string The base url of EchoAdaptEngine */
+    protected $endpoint;
+
+    /** @var Connector */
+    protected $connector;
+
+    protected $currentVersion;
+
     /**
      * Setup the EchoAdaptEngine
      *
      * @param string $endpoint URL of the service
+     * @param array $args
      */
-    public function __construct($endpoint) {
+    public function __construct($endpoint, $args = array())
+    {
         $this->endpoint = rtrim($endpoint, '/');
+        $this->currentVersion = $this->getValidVersion($args);
+        $this->connector = $this->buildConnector($args);
     }
-    
+
     /**
      * (non-PHPdoc)
      * @see \oat\libCat\CatEngine::setupSection()
@@ -71,45 +84,126 @@ class EchoAdaptEngine implements CatEngine
     }
     
     /**
-     * Helper to facilitate calls to the server
+     * Helper to facilitate calls to the server. Wrap the call to current connector.
      * 
      * @param string $url
      * @param string $method
      * @param array $data
      * @return array
      */
-    public function call($url, $method = 'GET', $data = [])
+    public function call($url, $method = \Request::HTTP_GET, $data = [])
     {
-        $request = new Request($method, $this->endpoint.'/'.self::ENGINE_VERSION.'/'.$url);
-        if (!empty($data)) {
-            $body = stream_for(json_encode($data));
-            $request = $request->withBody($body)->withAddedHeader('Content-Type', 'application/json');
-        }
-        $response = $this->send($request);
-        return $response;
+        return $this->getEchoAdaptConnector()->request($this->buildUrl($url), $data, $method);
     }
-    
+
     /**
-     * Function that handles communication and timeouts
+     * Get ServiceLocator
      *
-     * @param RequestInterface $request
-     * @return mixed
+     * @return ServiceManager|\Zend\ServiceManager\ServiceLocatorInterface
      */
-    private function send(RequestInterface $request) {
-    
-//        try {
-            $response = $this->getClient()->send($request);
-//        } catch(RequestException $e) {
-//            $response = $e->getResponse();
-//        }
-    
-        return json_decode($response->getBody()->getContents(), true );
+    public function getServiceLocator()
+    {
+        if (!is_null($this->serviceLocator)) {
+            return $this->serviceLocator;
+        }
+        return ServiceManager::getServiceManager();
     }
-    
+
     /**
-     * @return \GuzzleHttp\Client
+     * Get the current echoAdapt connector.
+     *
+     * @return Connector
      */
-    private function getClient() {
-        return new Client();
+    protected function getEchoAdaptConnector()
+    {
+        return $this->connector;
+    }
+
+    /**
+     * Build the full url associated to relative $url
+     *
+     * @param $url
+     * @return string
+     */
+    protected function buildUrl($url)
+    {
+        return $this->endpoint . '/' . $this->getCurrentVersion() . '/' . $url;
+    }
+
+    /**
+     * Extract the version from $args
+     * - If a version has been provided, validate and return it
+     * - If no version has been provided, set version v1.1 by default
+     *
+     * @param array $args
+     * @return mixed|string
+     * @throws \common_exception_InconsistentData In case of wrong version
+     */
+    protected function getValidVersion(array $args)
+    {
+        if (isset($args[self::OPTION_CONNECTOR_VERSION])) {
+            $this->validateVersion($args[self::OPTION_CONNECTOR_VERSION]);
+            return $args[self::OPTION_CONNECTOR_VERSION];
+        } else {
+            return self::ENGINE_VERSION_1_1;
+        }
+    }
+
+    /**
+     * Validate a given $version by checking if it's an allowed version
+     *
+     * @param $version
+     * @throws \common_exception_InconsistentData In case of wrong version
+     */
+    protected function validateVersion($version)
+    {
+        $allowedVersions = [self::ENGINE_VERSION_1, self::ENGINE_VERSION_1_1];
+        if (is_string($version) && in_array($version, $allowedVersions)) {
+            return;
+        }
+        throw new \common_exception_InconsistentData('EchoAdapt API version provided is not valid, expected: ' . implode(', ', $allowedVersions));
+    }
+
+    /**
+     * Get the api version used to connect to echo adapt
+     * - v1 : no auth
+     * - v1.1 : oauth
+     *
+     * @return string
+     */
+    protected function getCurrentVersion()
+    {
+        return $this->currentVersion;
+    }
+
+    /**
+     * Build the connector based on the used echoAdapt version.
+     *
+     * @param array $options
+     * @return mixed
+     * @throws \common_exception_NotImplemented
+     * @throws \common_exception_PreConditionFailure
+     */
+    protected function buildConnector(array $options = [])
+    {
+        /** @var \common_ext_ExtensionsManager $extensionManager */
+        $extensionManager = $this->getServiceLocator()->get(\common_ext_ExtensionsManager::SERVICE_ID);
+        if (!$extensionManager->isEnabled('taoOauth')) {
+            throw new \common_exception_PreConditionFailure('Echo adapt engine requires taoOauth extension to connect to API');
+        }
+
+        $connectorFactory = new ConnectorFactory();
+
+        if ($this->getCurrentVersion() == self::ENGINE_VERSION_1) {
+            return $connectorFactory->buildNoAuthConnector($options);
+        }
+
+        if ($this->getCurrentVersion() == self::ENGINE_VERSION_1_1) {
+            return $connectorFactory->buildOauthConnector($options);
+        }
+
+        throw new \common_exception_NotImplemented(
+            'EchoAdapt API version "' . $this->getCurrentVersion() . '" does not have associated connector.'
+        );
     }
 }

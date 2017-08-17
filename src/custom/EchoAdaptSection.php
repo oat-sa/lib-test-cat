@@ -45,12 +45,14 @@ class EchoAdaptSection implements CatSection
      * @param string $priorData
      * @return \oat\libCat\custom\EchoAdaptSession
      */
-    public function initSession($priorData = null) {
+    public function initSession($priorData = null)
+    {
         $data = $this->engine->call(
             'tests/'.$this->sectionId.'/test_taker_sessions',
             'POST',
             ["initialEstimatedAbility" => ['0.0']]
         );
+
         return new EchoAdaptSession(
             $this->engine
             ,$this->sectionId

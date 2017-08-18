@@ -25,7 +25,8 @@
 	],
 	"require" : {
 		"php" : ">=5.3.10",
-		"guzzlehttp/guzzle" : "~6.0"
+		"guzzlehttp/guzzle" : "~6.0",
+		"oat-sa/pre-psr-middlewares" : "dev-master"
 	},
     "autoload" : {
         "psr-4" : {

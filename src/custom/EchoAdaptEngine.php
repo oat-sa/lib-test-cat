@@ -19,34 +19,30 @@
 
 namespace oat\libCat\custom;
 
+use GuzzleHttp\Psr7\Request;
+use function GuzzleHttp\Psr7\stream_for;
 use oat\libCat\CatEngine;
-use oat\oatbox\service\ServiceManager;
-use oat\taoOauth\model\connector\Connector;
-use oat\taoOauth\model\connector\ConnectorFactory;
-use Zend\ServiceManager\ServiceLocatorAwareInterface;
-use Zend\ServiceManager\ServiceLocatorAwareTrait;
+use Psr\Http\Message\RequestInterface;
+use oat\prePsr\httpMiddlewares\MiddlewareInterface;
 
 /**
  * Implementation of the EchoAdapt engine
  *
  * @author Joel Bout, <joel@taotesting.com>
  */
-class EchoAdaptEngine implements CatEngine, ServiceLocatorAwareInterface
+class EchoAdaptEngine implements CatEngine
 {
-    use ServiceLocatorAwareTrait;
-
-    const ENGINE_VERSION_1 = 'v1';
-    const ENGINE_VERSION_1_1 = 'v1.1';
-
-    const OPTION_CONNECTOR_VERSION = 'version';
+    const OPTION_VERSION = 'version';
+    const OPTION_CONNECTOR = 'connector';
 
     /** @var string The base url of EchoAdaptEngine */
     protected $endpoint;
 
-    /** @var Connector */
+    /** @var MiddlewareInterface The connector to handle the request */
     protected $connector;
 
-    protected $currentVersion;
+    /** @var  string The API version to reach */
+    protected $version;
 
     /**
      * Setup the EchoAdaptEngine
@@ -57,8 +53,7 @@ class EchoAdaptEngine implements CatEngine, ServiceLocatorAwareInterface
     public function __construct($endpoint, $args = array())
     {
         $this->endpoint = rtrim($endpoint, '/');
-        $this->currentVersion = $this->getValidVersion($args);
-        $this->connector = $this->buildConnector($args);
+        $this->createEndpoint($args);
     }
 
     /**
@@ -82,37 +77,45 @@ class EchoAdaptEngine implements CatEngine, ServiceLocatorAwareInterface
         }
         return new EchoAdaptSection($this, $identifier);
     }
-    
+
     /**
      * Helper to facilitate calls to the server. Wrap the call to current connector.
-     * 
+     * Send the request to the server and return the decoded content.
+     *
      * @param string $url
      * @param string $method
      * @param array $data
      * @return array
      */
-    public function call($url, $method = \Request::HTTP_GET, $data = [])
+    public function call($url, $method = 'GET', $data = [])
     {
-        return $this->getEchoAdaptConnector()->request($this->buildUrl($url), $data, $method);
+        $request = $this->getRequest($this->buildUrl($url), $method, $data);
+        $response = $this->getEchoAdaptConnector()->process($request, null);
+        return json_decode($response->getBody()->getContents(), true);
     }
 
     /**
-     * Get ServiceLocator
+     * Get a request, add $params to request body and return it
      *
-     * @return ServiceManager|\Zend\ServiceManager\ServiceLocatorInterface
+     * @param $url
+     * @param string $method
+     * @param array $params
+     * @return RequestInterface
      */
-    public function getServiceLocator()
+    protected function getRequest($url, $method = 'GET', array $params = array())
     {
-        if (!is_null($this->serviceLocator)) {
-            return $this->serviceLocator;
+        $request = new Request($method, $url);
+        if (!empty($params)) {
+            $body = stream_for(json_encode($params));
+            $request = $request->withBody($body)->withAddedHeader('Content-Type', 'application/json');
         }
-        return ServiceManager::getServiceManager();
+        return $request;
     }
 
     /**
      * Get the current echoAdapt connector.
      *
-     * @return Connector
+     * @return MiddlewareInterface
      */
     protected function getEchoAdaptConnector()
     {
@@ -127,83 +130,52 @@ class EchoAdaptEngine implements CatEngine, ServiceLocatorAwareInterface
      */
     protected function buildUrl($url)
     {
-        return $this->endpoint . '/' . $this->getCurrentVersion() . '/' . $url;
-    }
-
-    /**
-     * Extract the version from $args
-     * - If a version has been provided, validate and return it
-     * - If no version has been provided, set version v1.1 by default
-     *
-     * @param array $args
-     * @return mixed|string
-     * @throws \common_exception_InconsistentData In case of wrong version
-     */
-    protected function getValidVersion(array $args)
-    {
-        if (isset($args[self::OPTION_CONNECTOR_VERSION])) {
-            $this->validateVersion($args[self::OPTION_CONNECTOR_VERSION]);
-            return $args[self::OPTION_CONNECTOR_VERSION];
-        } else {
-            return self::ENGINE_VERSION_1_1;
-        }
-    }
-
-    /**
-     * Validate a given $version by checking if it's an allowed version
-     *
-     * @param $version
-     * @throws \common_exception_InconsistentData In case of wrong version
-     */
-    protected function validateVersion($version)
-    {
-        $allowedVersions = [self::ENGINE_VERSION_1, self::ENGINE_VERSION_1_1];
-        if (is_string($version) && in_array($version, $allowedVersions)) {
-            return;
-        }
-        throw new \common_exception_InconsistentData('EchoAdapt API version provided is not valid, expected: ' . implode(', ', $allowedVersions));
+        return $this->endpoint . '/' . $this->getVersion() . '/' . $url;
     }
 
     /**
      * Get the api version used to connect to echo adapt
-     * - v1 : no auth
-     * - v1.1 : oauth
      *
      * @return string
      */
-    protected function getCurrentVersion()
+    protected function getVersion()
     {
-        return $this->currentVersion;
+        return $this->version;
     }
 
     /**
-     * Build the connector based on the used echoAdapt version.
+     * Create the connector and version, based on the entry $options.
      *
      * @param array $options
-     * @return mixed
-     * @throws \common_exception_NotImplemented
-     * @throws \common_exception_PreConditionFailure
+     * @throws \common_exception_InconsistentData
      */
-    protected function buildConnector(array $options = [])
+    protected function createEndpoint(array $options = [])
     {
-        /** @var \common_ext_ExtensionsManager $extensionManager */
-        $extensionManager = $this->getServiceLocator()->get(\common_ext_ExtensionsManager::SERVICE_ID);
-        if (!$extensionManager->isEnabled('taoOauth')) {
-            throw new \common_exception_PreConditionFailure('Echo adapt engine requires taoOauth extension to connect to API');
+        if (isset($options[self::OPTION_VERSION])) {
+            $this->version = $options[self::OPTION_VERSION];
+        } else {
+            throw new \InvalidArgumentException('No API version provided. Cannot connect to endpoint.');
         }
 
-        $connectorFactory = new ConnectorFactory();
-
-        if ($this->getCurrentVersion() == self::ENGINE_VERSION_1) {
-            return $connectorFactory->buildNoAuthConnector($options);
+        if (!isset($options[self::OPTION_CONNECTOR])) {
+            throw new \InvalidArgumentException('No API connector provided. Cannot connect to endpoint.');
         }
 
-        if ($this->getCurrentVersion() == self::ENGINE_VERSION_1_1) {
-            return $connectorFactory->buildOauthConnector($options);
+        $connector = $options[self::OPTION_CONNECTOR];
+        if (is_array($connector)) {
+            $connectorClass = isset($connector['class']) ? $connector['class'] : null;
+            $connectorOptions = isset($connector['options']) ? $connector['options'] : array();
+            if (!is_a($connectorClass, MiddlewareInterface::class, true)) {
+                throw new \InvalidArgumentException('Connector has to implement middleware interface.');
+            }
+            $connector = new $connectorClass($connectorOptions);
+        } elseif (is_object($connector)) {
+            if (!is_a($connector, MiddlewareInterface::class)) {
+                throw new \InvalidArgumentException('Connector has to implement middleware interface.');
+            }
+        } else {
+            throw new \InvalidArgumentException('Connector is misconfigured.');
         }
-
-        throw new \common_exception_NotImplemented(
-            'EchoAdapt API version "' . $this->getCurrentVersion() . '" does not have associated connector.'
-        );
+        $this->connector = $connector;
     }
 }

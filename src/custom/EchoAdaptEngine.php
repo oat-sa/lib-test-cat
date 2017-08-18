@@ -19,15 +19,9 @@
 
 namespace oat\libCat\custom;
 
+use GuzzleHttp\ClientInterface;
 use oat\libCat\CatEngine;
-use GuzzleHttp\Psr7\Request;
-use function GuzzleHttp\json_decode;
-use function GuzzleHttp\json_encode;
-use GuzzleHttp\Psr7\Stream;
-use function GuzzleHttp\Psr7\stream_for;
-use GuzzleHttp\Client;
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
+
 /**
  * Implementation of the EchoAdapt engine
  *
@@ -35,19 +29,30 @@ use Psr\Http\Message\ResponseInterface;
  */
 class EchoAdaptEngine implements CatEngine
 {
-    const ENGINE_VERSION = 'v1';
-    
-    private $endpoint;
-    
+    const OPTION_VERSION = 'version';
+    const OPTION_CLIENT = 'client';
+
+    /** @var string The base url of EchoAdaptEngine */
+    protected $endpoint;
+
+    /** @var ClientInterface The client to handle the request */
+    protected $client;
+
+    /** @var  string The API version to reach */
+    protected $version;
+
     /**
      * Setup the EchoAdaptEngine
      *
      * @param string $endpoint URL of the service
+     * @param array $args
      */
-    public function __construct($endpoint) {
+    public function __construct($endpoint, $args = array())
+    {
         $this->endpoint = rtrim($endpoint, '/');
+        $this->createClient($args);
     }
-    
+
     /**
      * (non-PHPdoc)
      * @see \oat\libCat\CatEngine::setupSection()
@@ -69,10 +74,11 @@ class EchoAdaptEngine implements CatEngine
         }
         return new EchoAdaptSection($this, $identifier);
     }
-    
+
     /**
-     * Helper to facilitate calls to the server
-     * 
+     * Helper to facilitate calls to the server. Wrap the call to EchoAdapt client.
+     * Send the request to the server and return the decoded content.
+     *
      * @param string $url
      * @param string $method
      * @param array $data
@@ -80,36 +86,78 @@ class EchoAdaptEngine implements CatEngine
      */
     public function call($url, $method = 'GET', $data = [])
     {
-        $request = new Request($method, $this->endpoint.'/'.self::ENGINE_VERSION.'/'.$url);
+        $options = ['headers' => []];
         if (!empty($data)) {
-            $body = stream_for(json_encode($data));
-            $request = $request->withBody($body)->withAddedHeader('Content-Type', 'application/json');
+            $options['body'] = json_encode($data);
         }
-        $response = $this->send($request);
-        return $response;
+        $response = $this->getEchoAdaptClient()->request($method, $this->buildUrl($url), $options);
+        return json_decode($response->getBody()->getContents(), true);
     }
-    
+
     /**
-     * Function that handles communication and timeouts
+     * Get the EchoAdapt client.
      *
-     * @param RequestInterface $request
-     * @return mixed
+     * @return ClientInterface
      */
-    private function send(RequestInterface $request) {
-    
-//        try {
-            $response = $this->getClient()->send($request);
-//        } catch(RequestException $e) {
-//            $response = $e->getResponse();
-//        }
-    
-        return json_decode($response->getBody()->getContents(), true );
+    protected function getEchoAdaptClient()
+    {
+        return $this->client;
     }
-    
+
     /**
-     * @return \GuzzleHttp\Client
+     * Build the full url associated to relative $url
+     *
+     * @param $url
+     * @return string
      */
-    private function getClient() {
-        return new Client();
+    protected function buildUrl($url)
+    {
+        return $this->endpoint . '/' . $this->getVersion() . '/' . $url;
+    }
+
+    /**
+     * Get the api version used to connect to echo adapt
+     *
+     * @return string
+     */
+    protected function getVersion()
+    {
+        return $this->version;
+    }
+
+    /**
+     * Create the client and version, based on the entry $options.
+     *
+     * @param array $options
+     * @throws \common_exception_InconsistentData
+     */
+    protected function createClient(array $options = [])
+    {
+        if (isset($options[self::OPTION_VERSION])) {
+            $this->version = $options[self::OPTION_VERSION];
+        } else {
+            throw new \InvalidArgumentException('No API version provided. Cannot connect to endpoint.');
+        }
+
+        if (!isset($options[self::OPTION_CLIENT])) {
+            throw new \InvalidArgumentException('No API client provided. Cannot connect to endpoint.');
+        }
+
+        $client = $options[self::OPTION_CLIENT];
+        if (is_array($client)) {
+            $clientClass = isset($client['class']) ? $client['class'] : null;
+            $clientOptions = isset($client['options']) ? $client['options'] : array();
+            if (!is_a($clientClass, ClientInterface::class, true)) {
+                throw new \InvalidArgumentException('Client has to implement ClientInterface interface.');
+            }
+            $client = new $clientClass($clientOptions);
+        } elseif (is_object($client)) {
+            if (!is_a($client, ClientInterface::class)) {
+                throw new \InvalidArgumentException('Client has to implement ClientInterface interface.');
+            }
+        } else {
+            throw new \InvalidArgumentException('Client is misconfigured.');
+        }
+        $this->client = $client;
     }
 }

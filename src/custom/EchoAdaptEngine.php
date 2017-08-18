@@ -50,7 +50,7 @@ class EchoAdaptEngine implements CatEngine
     public function __construct($endpoint, $args = array())
     {
         $this->endpoint = rtrim($endpoint, '/');
-        $this->createEndpoint($args);
+        $this->createClient($args);
     }
 
     /**
@@ -127,7 +127,7 @@ class EchoAdaptEngine implements CatEngine
      * @param array $options
      * @throws \common_exception_InconsistentData
      */
-    protected function createEndpoint(array $options = [])
+    protected function createClient(array $options = [])
     {
         if (isset($options[self::OPTION_VERSION])) {
             $this->version = $options[self::OPTION_VERSION];
@@ -144,12 +144,12 @@ class EchoAdaptEngine implements CatEngine
             $clientClass = isset($client['class']) ? $client['class'] : null;
             $clientOptions = isset($client['options']) ? $client['options'] : array();
             if (!is_a($clientClass, ClientInterface::class, true)) {
-                throw new \InvalidArgumentException('Client has to implement middleware interface.');
+                throw new \InvalidArgumentException('Client has to implement ClientInterface interface.');
             }
             $client = new $clientClass($clientOptions);
         } elseif (is_object($client)) {
             if (!is_a($client, ClientInterface::class)) {
-                throw new \InvalidArgumentException('Client has to implement middleware interface.');
+                throw new \InvalidArgumentException('Client has to implement ClientInterface interface.');
             }
         } else {
             throw new \InvalidArgumentException('Client is misconfigured.');

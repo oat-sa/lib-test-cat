@@ -86,10 +86,10 @@ class EchoAdaptEngine implements CatEngine
      */
     public function call($url, $method = 'GET', $data = [])
     {
-        $options = [
-            'headers' => [],
-            'body' => json_encode($data)
-        ];
+        $options = ['headers' => []];
+        if (!empty($data)) {
+            $options['body'] = json_encode($data);
+        }
         $response = $this->getEchoAdaptClient()->request($method, $this->buildUrl($url), $options);
         return json_decode($response->getBody()->getContents(), true);
     }

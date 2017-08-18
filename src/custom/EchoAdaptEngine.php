@@ -19,11 +19,8 @@
 
 namespace oat\libCat\custom;
 
-use GuzzleHttp\Psr7\Request;
-use function GuzzleHttp\Psr7\stream_for;
+use GuzzleHttp\ClientInterface;
 use oat\libCat\CatEngine;
-use Psr\Http\Message\RequestInterface;
-use oat\prePsr\httpMiddlewares\MiddlewareInterface;
 
 /**
  * Implementation of the EchoAdapt engine
@@ -33,13 +30,13 @@ use oat\prePsr\httpMiddlewares\MiddlewareInterface;
 class EchoAdaptEngine implements CatEngine
 {
     const OPTION_VERSION = 'version';
-    const OPTION_CONNECTOR = 'connector';
+    const OPTION_CLIENT = 'client';
 
     /** @var string The base url of EchoAdaptEngine */
     protected $endpoint;
 
-    /** @var MiddlewareInterface The connector to handle the request */
-    protected $connector;
+    /** @var ClientInterface The client to handle the request */
+    protected $client;
 
     /** @var  string The API version to reach */
     protected $version;
@@ -79,7 +76,7 @@ class EchoAdaptEngine implements CatEngine
     }
 
     /**
-     * Helper to facilitate calls to the server. Wrap the call to current connector.
+     * Helper to facilitate calls to the server. Wrap the call to EchoAdapt client.
      * Send the request to the server and return the decoded content.
      *
      * @param string $url
@@ -89,37 +86,18 @@ class EchoAdaptEngine implements CatEngine
      */
     public function call($url, $method = 'GET', $data = [])
     {
-        $request = $this->getRequest($this->buildUrl($url), $method, $data);
-        $response = $this->getEchoAdaptConnector()->process($request, null);
+        $response = $this->getEchoAdaptClient()->request($method, $this->buildUrl($url), $data);
         return json_decode($response->getBody()->getContents(), true);
     }
 
     /**
-     * Get a request, add $params to request body and return it
+     * Get the EchoAdapt client.
      *
-     * @param $url
-     * @param string $method
-     * @param array $params
-     * @return RequestInterface
+     * @return ClientInterface
      */
-    protected function getRequest($url, $method = 'GET', array $params = array())
+    protected function getEchoAdaptClient()
     {
-        $request = new Request($method, $url);
-        if (!empty($params)) {
-            $body = stream_for(json_encode($params));
-            $request = $request->withBody($body)->withAddedHeader('Content-Type', 'application/json');
-        }
-        return $request;
-    }
-
-    /**
-     * Get the current echoAdapt connector.
-     *
-     * @return MiddlewareInterface
-     */
-    protected function getEchoAdaptConnector()
-    {
-        return $this->connector;
+        return $this->client;
     }
 
     /**
@@ -144,7 +122,7 @@ class EchoAdaptEngine implements CatEngine
     }
 
     /**
-     * Create the connector and version, based on the entry $options.
+     * Create the client and version, based on the entry $options.
      *
      * @param array $options
      * @throws \common_exception_InconsistentData
@@ -157,25 +135,25 @@ class EchoAdaptEngine implements CatEngine
             throw new \InvalidArgumentException('No API version provided. Cannot connect to endpoint.');
         }
 
-        if (!isset($options[self::OPTION_CONNECTOR])) {
-            throw new \InvalidArgumentException('No API connector provided. Cannot connect to endpoint.');
+        if (!isset($options[self::OPTION_CLIENT])) {
+            throw new \InvalidArgumentException('No API client provided. Cannot connect to endpoint.');
         }
 
-        $connector = $options[self::OPTION_CONNECTOR];
-        if (is_array($connector)) {
-            $connectorClass = isset($connector['class']) ? $connector['class'] : null;
-            $connectorOptions = isset($connector['options']) ? $connector['options'] : array();
-            if (!is_a($connectorClass, MiddlewareInterface::class, true)) {
-                throw new \InvalidArgumentException('Connector has to implement middleware interface.');
+        $client = $options[self::OPTION_CLIENT];
+        if (is_array($client)) {
+            $clientClass = isset($client['class']) ? $client['class'] : null;
+            $clientOptions = isset($client['options']) ? $client['options'] : array();
+            if (!is_a($clientClass, ClientInterface::class, true)) {
+                throw new \InvalidArgumentException('Client has to implement middleware interface.');
             }
-            $connector = new $connectorClass($connectorOptions);
-        } elseif (is_object($connector)) {
-            if (!is_a($connector, MiddlewareInterface::class)) {
-                throw new \InvalidArgumentException('Connector has to implement middleware interface.');
+            $client = new $clientClass($clientOptions);
+        } elseif (is_object($client)) {
+            if (!is_a($client, ClientInterface::class)) {
+                throw new \InvalidArgumentException('Client has to implement middleware interface.');
             }
         } else {
-            throw new \InvalidArgumentException('Connector is misconfigured.');
+            throw new \InvalidArgumentException('Client is misconfigured.');
         }
-        $this->connector = $connector;
+        $this->client = $client;
     }
 }

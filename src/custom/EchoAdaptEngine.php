@@ -29,9 +29,6 @@ use oat\libCat\CatEngine;
  */
 class EchoAdaptEngine implements CatEngine
 {
-    const OPTION_VERSION = 'version';
-    const OPTION_CLIENT = 'client';
-
     /** @var string The base url of EchoAdaptEngine */
     protected $endpoint;
 
@@ -45,12 +42,14 @@ class EchoAdaptEngine implements CatEngine
      * Setup the EchoAdaptEngine
      *
      * @param string $endpoint URL of the service
-     * @param array $args
+     * @param $version
+     * @param ClientInterface $client
      */
-    public function __construct($endpoint, $args = array())
+    public function __construct($endpoint, $version, ClientInterface $client)
     {
         $this->endpoint = rtrim($endpoint, '/');
-        $this->createClient($args);
+        $this->version = $version;
+        $this->client = $client;
     }
 
     /**
@@ -123,41 +122,5 @@ class EchoAdaptEngine implements CatEngine
     protected function getVersion()
     {
         return $this->version;
-    }
-
-    /**
-     * Create the client and version, based on the entry $options.
-     *
-     * @param array $options
-     * @throws \common_exception_InconsistentData
-     */
-    protected function createClient(array $options = [])
-    {
-        if (isset($options[self::OPTION_VERSION])) {
-            $this->version = $options[self::OPTION_VERSION];
-        } else {
-            throw new \InvalidArgumentException('No API version provided. Cannot connect to endpoint.');
-        }
-
-        if (!isset($options[self::OPTION_CLIENT])) {
-            throw new \InvalidArgumentException('No API client provided. Cannot connect to endpoint.');
-        }
-
-        $client = $options[self::OPTION_CLIENT];
-        if (is_array($client)) {
-            $clientClass = isset($client['class']) ? $client['class'] : null;
-            $clientOptions = isset($client['options']) ? $client['options'] : array();
-            if (!is_a($clientClass, ClientInterface::class, true)) {
-                throw new \InvalidArgumentException('Client has to implement ClientInterface interface.');
-            }
-            $client = new $clientClass($clientOptions);
-        } elseif (is_object($client)) {
-            if (!is_a($client, ClientInterface::class)) {
-                throw new \InvalidArgumentException('Client has to implement ClientInterface interface.');
-            }
-        } else {
-            throw new \InvalidArgumentException('Client is misconfigured.');
-        }
-        $this->client = $client;
     }
 }

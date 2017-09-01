@@ -21,6 +21,8 @@ namespace oat\libCat\custom;
 
 use GuzzleHttp\ClientInterface;
 use oat\libCat\CatEngine;
+use oat\libCat\Exception\CatEngineConnectivityException;
+use oat\libCat\Exception\CatEngineException;
 
 /**
  * Implementation of the EchoAdapt engine
@@ -69,7 +71,7 @@ class EchoAdaptEngine implements CatEngine
     {
         $identifier = json_decode($jsonString);
         if (!is_numeric($identifier)) {
-            throw new \Exception('Unable to restore EchoAdaptSection');
+            throw new CatEngineException('Unable to restore EchoAdaptSection');
         }
         return new EchoAdaptSection($this, $identifier);
     }
@@ -78,10 +80,11 @@ class EchoAdaptEngine implements CatEngine
      * Helper to facilitate calls to the server. Wrap the call to EchoAdapt client.
      * Send the request to the server and return the decoded content.
      *
-     * @param string $url
+     * @param $url
      * @param string $method
      * @param array $data
-     * @return array
+     * @return mixed
+     * @throws CatEngineConnectivityException
      */
     public function call($url, $method = 'GET', $data = [])
     {
@@ -89,8 +92,13 @@ class EchoAdaptEngine implements CatEngine
         if (!empty($data)) {
             $options['body'] = json_encode($data);
         }
-        $response = $this->getEchoAdaptClient()->request($method, $this->buildUrl($url), $options);
-        return json_decode($response->getBody()->getContents(), true);
+
+        try {
+            $response = $this->getEchoAdaptClient()->request($method, $this->buildUrl($url), $options);
+            return json_decode($response->getBody()->getContents(), true);
+        } catch (\Exception $e) {
+           throw new CatEngineConnectivityException('', 0, $e);
+        }
     }
 
     /**

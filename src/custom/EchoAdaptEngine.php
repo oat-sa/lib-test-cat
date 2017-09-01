@@ -22,7 +22,7 @@ namespace oat\libCat\custom;
 use GuzzleHttp\ClientInterface;
 use oat\libCat\CatEngine;
 use oat\libCat\Exception\CatEngineConnectivityException;
-use oat\taoQtiTest\models\cat\CatException;
+use oat\libCat\Exception\CatEngineException;
 
 /**
  * Implementation of the EchoAdapt engine
@@ -71,7 +71,7 @@ class EchoAdaptEngine implements CatEngine
     {
         $identifier = json_decode($jsonString);
         if (!is_numeric($identifier)) {
-            throw new CatException('Unable to restore EchoAdaptSection');
+            throw new CatEngineException('Unable to restore EchoAdaptSection');
         }
         return new EchoAdaptSection($this, $identifier);
     }

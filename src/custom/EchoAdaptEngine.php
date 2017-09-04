@@ -21,8 +21,8 @@ namespace oat\libCat\custom;
 
 use GuzzleHttp\ClientInterface;
 use oat\libCat\CatEngine;
-use oat\libCat\Exception\CatEngineConnectivityException;
-use oat\libCat\Exception\CatEngineException;
+use oat\libCat\exception\CatEngineConnectivityException;
+use oat\libCat\exception\CatEngineException;
 
 /**
  * Implementation of the EchoAdapt engine

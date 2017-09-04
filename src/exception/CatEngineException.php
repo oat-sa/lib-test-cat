@@ -18,7 +18,7 @@
  *
  */
 
-namespace oat\libCat\Exception;
+namespace oat\libCat\exception;
 
 /**
  * Class CatEngineException

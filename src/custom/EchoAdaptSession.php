@@ -20,9 +20,9 @@
 namespace oat\libCat\custom;
 
 use oat\libCat\CatSession;
-use oat\libCat\exception\CatEngineException;
 use oat\libCat\result\ResultVariable;
 use oat\libCat\result\ItemResult;
+
 /**
  * Implementation of the Echoadapt session
  *

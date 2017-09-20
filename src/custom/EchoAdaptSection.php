@@ -21,6 +21,7 @@ namespace oat\libCat\custom;
 
 use oat\libCat\CatSection;
 use function GuzzleHttp\json_decode;
+
 /**
  * Implementation of an EchoAdapt section
  *

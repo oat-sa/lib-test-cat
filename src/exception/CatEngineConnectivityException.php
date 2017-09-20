@@ -20,8 +20,6 @@
 
 namespace oat\libCat\exception;
 
-use Throwable;
-
 /**
  * Class CatEngineConnectivityException
  *
@@ -31,7 +29,7 @@ use Throwable;
  */
 class CatEngineConnectivityException extends CatEngineException
 {
-    public function __construct($message = "", $code = 0, Throwable $previous = null)
+    public function __construct($message = "", $code = 0, \Exception $previous = null)
     {
         if ($message == "") {
             $message = 'Connection to Computer Adaptive Testing engine cannot be established.';

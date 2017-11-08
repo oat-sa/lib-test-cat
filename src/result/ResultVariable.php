@@ -18,6 +18,10 @@
 */
 
 namespace oat\libCat\result;
+use oat\libCat\result\variable\OutcomeVariable;
+use oat\libCat\result\variable\ResponseVariable;
+use oat\libCat\result\variable\TemplateVariable;
+use oat\libCat\result\variable\TraceVariable;
 
 /**
  * Dataobject to represent a single variable
@@ -26,6 +30,11 @@ namespace oat\libCat\result;
  */
 class ResultVariable implements \JsonSerializable
 {
+    const OUTCOME_VARIABLE = 'outcome';
+    const RESPONSE_VARIABLE = 'response';
+    const TRACE_VARIABLE = 'trace';
+    const TEMPLATE_VARIABLE = 'template';
+
     private $identifier;
     
     private $type;
@@ -38,8 +47,24 @@ class ResultVariable implements \JsonSerializable
      * @param array $array
      * @return \oat\libCat\result\ResultVariable
      */
-    public static function restore($array)
+    public static function restore($array, $variableType = self::OUTCOME_VARIABLE)
     {
+        switch ($variableType) {
+            case self::TRACE_VARIABLE:
+                $variableClass = TraceVariable::class;
+                break;
+            case self::RESPONSE_VARIABLE:
+                $variableClass = ResponseVariable::class;
+                break;
+            case self::TEMPLATE_VARIABLE:
+                $variableClass = TemplateVariable::class;
+                break;
+            case self::OUTCOME_VARIABLE:
+            default:
+                $variableClass = OutcomeVariable::class;
+                break;
+        }
+
         $values = [];
         foreach ($array['values'] as $value) {
             $values[] = $value['valueString'];
@@ -47,7 +72,7 @@ class ResultVariable implements \JsonSerializable
         if (count($values) == 1) {
             $values = reset($values);
         }
-        return new static($array["identifier"], $value['baseType'], $values);
+        return new $variableClass($array["identifier"], $value['baseType'], $values);
     }
     
     /**

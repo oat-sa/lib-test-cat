@@ -25,22 +25,17 @@ namespace oat\libCat\result;
  * 
  * @author Joel Bout, <joel@taotesting.com>
  */
-class ItemResult implements \JsonSerializable
+class ItemResult extends TestResult
 {
     /**
      * @var string
      */
     private $itemRefId;
     
-    /**
-     * @var ResultVariable[]
-     */
-    private $variables;
-    
     public function __construct($itemRefId, $variables)
     {
         $this->itemRefId = $itemRefId;
-        $this->variables = is_array($variables) ? $variables : [$variables];
+        parent::__construct($variables);
     }
     
     /**
@@ -51,15 +46,6 @@ class ItemResult implements \JsonSerializable
     {
         return $this->itemRefId;
     }
-    
-    /**
-     * Returns the variables of the item
-     * @return ResultVariable[]
-     */
-    public function getVariables()
-    {
-        return $this->variables;
-    }
 
     /**
      * (non-PHPdoc)
@@ -67,9 +53,7 @@ class ItemResult implements \JsonSerializable
      */
     public function jsonSerialize()
     {
-        return [
-            'identifier' => $this->itemRefId,
-            'outcomeVariables' => $this->variables
-        ];
+        return array_merge(['identifier' => $this->itemRefId], parent::jsonSerialize());
     }
+
 }

@@ -22,6 +22,7 @@ namespace oat\libCat\custom;
 use oat\libCat\CatSession;
 use oat\libCat\result\ResultVariable;
 use oat\libCat\result\ItemResult;
+use oat\libCat\result\TestResult;
 
 /**
  * Implementation of the Echoadapt session
@@ -89,17 +90,46 @@ class EchoAdaptSession implements CatSession
      * (non-PHPdoc)
      * @see \oat\libCat\CatSession::getResults()
      */
-    public function getResults()
+    public function getResults($scope = self::TEST_RESULTS_SCOPE)
     {
         $variables = [];
-        $variableTypes = ["templateVariables", "responseVariables", "outcomeVariables"];
+        $variableTypes = [
+            'template' => 'templateVariables',
+            'response' => 'responseVariables',
+            'outcome' => 'outcomeVariables',
+            'trace' => 'traceVariables',
+        ];
+
+        /**
+         * Workaround to move item related variables to ItemResults from TestResult
+         */
         foreach ($variableTypes as $varType) {
             if (isset($this->assesmentResult['testResult'][$varType])) {
-                foreach ($this->assesmentResult['testResult'][$varType] as $variable) {
-                    $variables[] = ResultVariable::restore($variable);
+                foreach ($this->assesmentResult['testResult'][$varType] as $key => $misLocatedVariable) {
+                    if (strpos($misLocatedVariable['identifier'], 'CURRENT_') === 0) {
+                        $this->assesmentResult['itemResults'][$varType][] = $misLocatedVariable;
+                        unset($this->assesmentResult['testResult'][$varType][$key]);
+                    }
                 }
             }
         }
+
+        if ($scope == self::TEST_RESULTS_SCOPE) {
+            $result = $this->assesmentResult['testResult'];
+        } elseif ($scope == self::ITEM_RESULTS_SCOPE) {
+            $result = $this->assesmentResult['itemResults'];
+        } else {
+            $result = [];
+        }
+
+        foreach ($variableTypes as $varName => $varType) {
+            if (isset($result[$varType])) {
+                foreach ($result[$varType] as $variable) {
+                    $variables[] = ResultVariable::restore($variable, $varName);
+                }
+            }
+        }
+
         return $variables;
     }
     

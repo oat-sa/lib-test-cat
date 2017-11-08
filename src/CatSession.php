@@ -28,6 +28,10 @@ use oat\libCat\result\ItemResult;
  */
 interface CatSession extends \JsonSerializable
 {
+    const TEST_RESULTS_SCOPE = 'test';
+
+    const ITEM_RESULTS_SCOPE = 'item';
+
     /**
      * Returns the item reference ids of the next items to present
      * to the Testtaker for a given session and given results.
@@ -35,18 +39,19 @@ interface CatSession extends \JsonSerializable
      * This can modify the internal state of the session and requires
      * the session to be reserialized
      *
-     * @param ItemResult $results
+     * @param array $results
      * @return string[]
      */
     public function getTestMap($results = []);
-    
+
     /**
-     * Returns testresults provided by the engine
+     * Returns test or item results (following provided $scope) provided by the engine
      * Result ids might not be unique across the test
      *
-     * @return ResultVariable
+     * @param string $scope
+     * @return ResultVariable[]
      */
-    public function getResults();
+    public function getResults($scope = self::TEST_RESULTS_SCOPE);
     
     /**
      * Get Test Taker Session Identifier.

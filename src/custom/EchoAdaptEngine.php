@@ -88,6 +88,7 @@ class EchoAdaptEngine implements CatEngine
      */
     public function call($url, $method = 'GET', $data = [])
     {
+        \common_Logger::e(__METHOD__);
         $options = ['headers' => []];
         if (!empty($data)) {
             $options['body'] = json_encode($data);

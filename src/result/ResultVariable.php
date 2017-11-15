@@ -18,10 +18,6 @@
 */
 
 namespace oat\libCat\result;
-use oat\libCat\result\variable\OutcomeVariable;
-use oat\libCat\result\variable\ResponseVariable;
-use oat\libCat\result\variable\TemplateVariable;
-use oat\libCat\result\variable\TraceVariable;
 
 /**
  * Dataobject to represent a single variable
@@ -40,31 +36,21 @@ class ResultVariable implements \JsonSerializable
     private $type;
     
     private $value;
-    
+
+    private $variableType;
+
     /**
-     * Create a Resultvariable from the json array
-     * 
+     * Create a ResultVariable from the json array
+     *
+     * The given array is a serialization of Cat engine variable
+     * It must contains the values and baseType key
+     * Optionally the variableType can be present otherwise it will be evaluated as outcome variable
+     *
      * @param array $array
      * @return \oat\libCat\result\ResultVariable
      */
-    public static function restore($array, $variableType = self::OUTCOME_VARIABLE)
+    public static function restore($array)
     {
-        switch ($variableType) {
-            case self::TRACE_VARIABLE:
-                $variableClass = TraceVariable::class;
-                break;
-            case self::RESPONSE_VARIABLE:
-                $variableClass = ResponseVariable::class;
-                break;
-            case self::TEMPLATE_VARIABLE:
-                $variableClass = TemplateVariable::class;
-                break;
-            case self::OUTCOME_VARIABLE:
-            default:
-                $variableClass = OutcomeVariable::class;
-                break;
-        }
-
         $values = [];
         foreach ($array['values'] as $value) {
             $values[] = $value['valueString'];
@@ -72,7 +58,8 @@ class ResultVariable implements \JsonSerializable
         if (count($values) == 1) {
             $values = reset($values);
         }
-        return new $variableClass($array["identifier"], $value['baseType'], $values);
+        $variableType = isset($array['variableType']) ? $array['variableType'] : self::OUTCOME_VARIABLE;
+        return new ResultVariable($array["identifier"], $value['baseType'], $values, $variableType);
     }
     
     /**
@@ -82,15 +69,17 @@ class ResultVariable implements \JsonSerializable
      * @param string $type
      * @param mixed $value
      */
-    public function __construct($identifier, $type, $value)
+    public function __construct($identifier, $type, $value, $variableType = self::OUTCOME_VARIABLE)
     {
         $this->identifier = $identifier;
         $this->type = $type;
         $this->value = $value;
+        $this->setVariableType($variableType);
     }
 
     /**
      * Returns the variable identifier
+     *
      * @return string
      */
     public function getId()
@@ -100,11 +89,22 @@ class ResultVariable implements \JsonSerializable
 
     /**
      * Returns the variable value(s)
+     *
      * @return mixed
      */
     public function getValue()
     {
         return $this->value;
+    }
+
+    /**
+     * Return the variable type
+     *
+     * @return mixed
+     */
+    public function getVariableType()
+    {
+        return $this->variableType;
     }
 
     /**
@@ -123,7 +123,43 @@ class ResultVariable implements \JsonSerializable
         }
         return [
             'identifier' => $this->identifier,
+            'variableType' => $this->variableType,
             'values' => $valueArray
+        ];
+    }
+
+    /**
+     * Set the variable type
+     *
+     * It must be an allowedType, otherwise it will be an outcome variable
+     *
+     * @param $type
+     */
+    protected function setVariableType($type)
+    {
+        if (!in_array($type, $this->getAllowedVariableTypes())) {
+            $type = self::OUTCOME_VARIABLE;
+        }
+        $this->variableType = $type;
+    }
+
+    /**
+     * Get the allowed types for a variable
+     *
+     * - outcome
+     * - trace
+     * - response
+     * - template
+     *
+     * @return array
+     */
+    protected function getAllowedVariableTypes()
+    {
+        return [
+            self::OUTCOME_VARIABLE,
+            self::TRACE_VARIABLE,
+            self::RESPONSE_VARIABLE,
+            self::TEMPLATE_VARIABLE,
         ];
     }
 }

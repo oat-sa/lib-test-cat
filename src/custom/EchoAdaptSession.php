@@ -43,9 +43,19 @@ class EchoAdaptSession implements CatSession
     private $numberOfItemsInNextStage;
     
     private $linear;
-    
-    private $assesmentResult;
-    
+
+    /** @var array The brut assessment result from the engine */
+    private $assesmentResult = [];
+
+//    /** @var ItemResult The item results retrieved from last cat engine call */
+//    private $itemResults;
+//
+//    /** @var TestResult The test results retrieved from last cat engine call */
+//    private $testResults;
+
+    /** @var string The current session item id */
+    private $currentItemId = null;
+
     private $sessionState;
     
     public function __construct($engine, $sectionId, $testTakerSessionId, $nextItems, $numberOfItemsInNextStage, $linear, $assesmentResult, $sessionState)
@@ -56,8 +66,11 @@ class EchoAdaptSession implements CatSession
         $this->nextItems = $nextItems;
         $this->numberOfItemsInNextStage = $numberOfItemsInNextStage;
         $this->linear = $linear;
-        $this->assesmentResult = $assesmentResult;
         $this->sessionState = $sessionState;
+
+        $this->assesmentResult = $assesmentResult;
+
+//        $this->setResults($assesmentResult);
     }
     
     /**
@@ -79,66 +92,40 @@ class EchoAdaptSession implements CatSession
             $this->nextItems = $data['nextItems'];
             $this->numberOfItemsInNextStage = $data['numberOfItemsInNextStage'];
             $this->linear = $data['linear'];
-            $this->assesmentResult = $data['assesmentResult'];
             $this->sessionState = $data['sessionState'];
+            $this->assesmentResult = $data['assesmentResult'];
         }
 
         return $this->nextItems;
     }
-    
+
     /**
-     * (non-PHPdoc)
-     * @see \oat\libCat\CatSession::getResults()
+     * Get the result associated to the item
+     *
+     * @return ItemResult
      */
-    public function getResults($scope = self::TEST_RESULTS_SCOPE)
+    public function getItemResults()
     {
-        $variables = [];
-        $variableTypes = [
-            'template' => 'templateVariables',
-            'response' => 'responseVariables',
-            'outcome' => 'outcomeVariables',
-            'trace' => 'traceVariables',
-        ];
-
-        /**
-         * Workaround to move item related variables to ItemResults from TestResult
-         */
-        foreach ($variableTypes as $varType) {
-            if (isset($this->assesmentResult['testResult'][$varType])) {
-                foreach ($this->assesmentResult['testResult'][$varType] as $key => $misLocatedVariable) {
-                    if (strpos($misLocatedVariable['identifier'], 'CURRENT_') === 0) {
-                        $this->assesmentResult['itemResults'][$varType][] = $misLocatedVariable;
-                        unset($this->assesmentResult['testResult'][$varType][$key]);
-                    }
-                }
-            }
-        }
-
-        if ($scope == self::TEST_RESULTS_SCOPE) {
-            $result = $this->assesmentResult['testResult'];
-        } elseif ($scope == self::ITEM_RESULTS_SCOPE) {
-            $result = $this->assesmentResult['itemResults'];
-        } else {
-            $result = [];
-        }
-
-        foreach ($variableTypes as $varName => $varType) {
-            if (isset($result[$varType])) {
-                foreach ($result[$varType] as $variable) {
-                    $variables[] = ResultVariable::restore($variable, $varName);
-                }
-            }
-        }
-
-        return $variables;
+        return $this->itemResults;
     }
-    
+
+    /**
+     * Get the result associated to the item
+     *
+     * @return TestResult
+     */
+    public function getTestResults()
+    {
+        return $this->testResults;
+    }
+
     /**
      * (non-PHPdoc)
      * @see JsonSerializable::jsonSerialize()
      */
     public function jsonSerialize()
     {
+        \common_Logger::w(__METHOD__);
         return [
             'testTakerSessionId' => $this->testTakerSessionId,
             'nextItems' => $this->nextItems,
@@ -162,6 +149,78 @@ class EchoAdaptSession implements CatSession
     }
 
     /**
+     * Set the result from Cat Engine
+     *
+     * Move item outcome variable from test to item result
+     * Set the item, test and assesment results
+     *
+     * @param array $result
+     */
+    private function setResults(array $result = null)
+    {
+        if (empty($result)) {
+            return;
+        }
+
+        /**
+         * Workaround to move item related variables to ItemResults from TestResult
+         */
+        foreach ($result['testResult'] as $variableType => $variables) {
+            if (!empty($variables)) {
+                foreach ($variables as $key => $misLocatedVariable) {
+                    if (strpos($misLocatedVariable['identifier'], 'CURRENT_') === 0) {
+                        $result['itemResults'][$variableType][] = $misLocatedVariable;
+                        unset($result['testResult'][$variableType][$key]);
+                    }
+                }
+            }
+        }
+
+//        $this->itemResults = new ItemResult($this->currentItemId, $this->restoreVariables($result['itemResults']));
+//        $this->testResults = new TestResult($this->restoreVariables($result['testResult']));
+    }
+
+    /**
+     * Unserialize variables array to Variable object
+     *
+     * @param array $result The incoming variables array (with first keys as types)
+     * @return array An simple array of ResultVariable objects with type set
+     */
+    private function restoreVariables(array $result)
+    {
+        $restoredVariables = [];
+
+        foreach ($result as $type => $variables) {
+            if (empty($variables)) {
+                continue;
+            }
+
+            switch ($type) {
+                case 'templateVariables':
+                    $variableType = ResultVariable::TEMPLATE_VARIABLE;
+                    break;
+                case 'responseVariables':
+                    $variableType = ResultVariable::RESPONSE_VARIABLE;
+                    break;
+                case 'traceVariables':
+                    $variableType = ResultVariable::TRACE_VARIABLE;
+                    break;
+                case 'outcomeVariables':
+                default:
+                    $variableType = ResultVariable::OUTCOME_VARIABLE;
+                    break;
+            }
+
+            foreach ($variables as $variable) {
+                $variable['variableType'] = $variableType;
+                $restoredVariables[] = ResultVariable::restore($variable);
+            }
+        }
+
+        return $restoredVariables;
+    }
+
+    /**
      * filter out non 'score' variables
      *
      * @param ItemResult[] $results
@@ -177,6 +236,10 @@ class EchoAdaptSession implements CatSession
                 }
             }
             $results[$key] = new ItemResult($result->getItemRefId(), $scoreOnly);
+        }
+        // Get the last result as current item id
+        if (isset($result)) {
+            $this->currentItemId = $result->getItemRefId();
         }
 
         return $results;

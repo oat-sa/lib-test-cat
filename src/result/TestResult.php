@@ -19,11 +19,6 @@
 
 namespace oat\libCat\result;
 
-use oat\libCat\result\variable\OutcomeVariable;
-use oat\libCat\result\variable\ResponseVariable;
-use oat\libCat\result\variable\TemplateVariable;
-use oat\libCat\result\variable\TraceVariable;
-
 /**
  * Class TestResult
  *
@@ -36,6 +31,11 @@ class TestResult implements \JsonSerializable
     /** @var ResultVariable[] */
     protected $variables;
 
+    /**
+     * TestResult constructor.
+     *
+     * @param $variables
+     */
     public function __construct($variables)
     {
         $this->variables = is_array($variables) ? $variables : [$variables];
@@ -43,6 +43,7 @@ class TestResult implements \JsonSerializable
 
     /**
      * Returns the variables of the item
+     *
      * @return ResultVariable[]
      */
     public function getVariables()
@@ -55,41 +56,28 @@ class TestResult implements \JsonSerializable
      * @see JsonSerializable::jsonSerialize()
      */
     public function jsonSerialize()
-    {
-        $outcomeVariables = $responseVariables = $templateVariables = $traceVariables = [];
+    {        \common_Logger::w(__METHOD__);
+
+        return array(
+            'outcomeVariables' => $this->getVariables(),
+        );
+        $variables = [];
         foreach ($this->getVariables() as $variable) {
-            switch (get_class($variable)) {
-                case TraceVariable::class:
-                    $traceVariables[] = $variable;
+            switch ($variable->getVariableType()) {
+                case ResultVariable::TEMPLATE_VARIABLE:
+                    $variables['templateVariables'][] = $variable;
                     break;
-                case ResponseVariable::class:
-                    $responseVariables[] = $variable;
+                case ResultVariable::RESPONSE_VARIABLE:
+                    $variables['responseVariables'][] = $variable;
                     break;
-                case TemplateVariable::class:
-                    $templateVariables[] = $variable;
+                case ResultVariable::TRACE_VARIABLE:
+                    $variables['traceVariables'][] = $variable;
                     break;
-                case OutcomeVariable::class:
-                default:
-                    $outcomeVariables[] = $variable;
+                case ResultVariable::OUTCOME_VARIABLE:
+                    $variables['outcomeVariables'][] = $variable;
                     break;
             }
         }
-
-        $array = [];
-
-        if (!empty($traceVariables)) {
-            $array['traceVariables'] = $traceVariables;
-        }
-        if (!empty($responseVariables)) {
-            $array['responseVariables'] = $responseVariables;
-        }
-        if (!empty($templateVariables)) {
-            $array['templateVariables'] = $templateVariables;
-        }
-        if (!empty($outcomeVariables)) {
-            $array['outcomeVariables'] = $outcomeVariables;
-        }
-
-        return $array;
+        return $variables;
     }
 }

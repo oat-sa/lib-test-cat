@@ -28,10 +28,16 @@ namespace oat\libCat\result;
 class ItemResult extends TestResult
 {
     /**
-     * @var string
+     * @var string The associated item id
      */
     private $itemRefId;
-    
+
+    /**
+     * ItemResult constructor.
+     *
+     * @param $itemRefId
+     * @param $variables
+     */
     public function __construct($itemRefId, $variables)
     {
         $this->itemRefId = $itemRefId;
@@ -40,6 +46,7 @@ class ItemResult extends TestResult
     
     /**
      * Returns the item reference id
+     *
      * @return string
      */
     public function getItemRefId()
@@ -53,6 +60,11 @@ class ItemResult extends TestResult
      */
     public function jsonSerialize()
     {
+        return [
+            'identifier' => $this->itemRefId,
+            'outcomeVariables' => $this->variables
+        ];
+
         return array_merge(['identifier' => $this->itemRefId], parent::jsonSerialize());
     }
 

@@ -21,6 +21,8 @@ namespace oat\libCat;
 
 use oat\libCat\result\ResultVariable;
 use oat\libCat\result\ItemResult;
+use oat\libCat\result\TestResult;
+
 /**
  * Interface to describe a test taker session for a given section 
  *
@@ -45,14 +47,19 @@ interface CatSession extends \JsonSerializable
     public function getTestMap($results = []);
 
     /**
-     * Returns test or item results (following provided $scope) provided by the engine
-     * Result ids might not be unique across the test
+     * Get the result associated to the item
      *
-     * @param string $scope
-     * @return ResultVariable[]
+     * @return ItemResult
      */
-    public function getResults($scope = self::TEST_RESULTS_SCOPE);
-    
+    public function getItemResults();
+
+    /**
+     * Get the result associated to the item
+     *
+     * @return TestResult
+     */
+    public function getTestResults();
+
     /**
      * Get Test Taker Session Identifier.
      * 

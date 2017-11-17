@@ -78,8 +78,8 @@ class EchoAdaptSession implements CatSession
         $this->nextItems = $nextItems;
         $this->numberOfItemsInNextStage = $numberOfItemsInNextStage;
         $this->linear = $linear;
-        $this->sessionState = $sessionState;
         $this->assesmentResult = $assesmentResult;
+        $this->sessionState = $sessionState;
     }
 
     /**

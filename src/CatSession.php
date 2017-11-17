@@ -30,10 +30,6 @@ use oat\libCat\result\TestResult;
  */
 interface CatSession extends \JsonSerializable
 {
-    const TEST_RESULTS_SCOPE = 'test';
-
-    const ITEM_RESULTS_SCOPE = 'item';
-
     /**
      * Returns the item reference ids of the next items to present
      * to the Testtaker for a given session and given results.

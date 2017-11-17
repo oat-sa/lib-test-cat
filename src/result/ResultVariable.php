@@ -32,9 +32,9 @@ class ResultVariable implements \JsonSerializable
     const TEMPLATE_VARIABLE = 'template';
 
     private $identifier;
-    
+
     private $type;
-    
+
     private $value;
 
     private $variableType;
@@ -59,15 +59,18 @@ class ResultVariable implements \JsonSerializable
             $values = reset($values);
         }
         $variableType = isset($array['variableType']) ? $array['variableType'] : self::OUTCOME_VARIABLE;
-        return new ResultVariable($array["identifier"], $value['baseType'], $values, $variableType);
+        $return = new static($array["identifier"], $value['baseType'], $values, $variableType);
+
+        return $return;
     }
-    
+
     /**
      * Create a new ResultVariable
      *
-     * @param string $identifier
-     * @param string $type
-     * @param mixed $value
+     * @param $identifier
+     * @param $type
+     * @param $value
+     * @param string $variableType
      */
     public function __construct($identifier, $type, $value, $variableType = self::OUTCOME_VARIABLE)
     {
@@ -123,7 +126,6 @@ class ResultVariable implements \JsonSerializable
         }
         return [
             'identifier' => $this->identifier,
-            'variableType' => $this->variableType,
             'values' => $valueArray
         ];
     }

@@ -1,19 +1,19 @@
 <?php
-/**  
+/**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; under version 2
  * of the License (non-upgradable).
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- * 
+ *
  * Copyright (c) 2017 (original work) Open Assessment Technologies SA
  */
 
@@ -33,31 +33,43 @@ class EchoAdaptSession implements CatSession
 {
     /** @var  EchoAdaptEngine */
     private $engine;
-    
+
     private $sectionId;
-    
+
     private $testTakerSessionId;
-    
+
     private $nextItems;
-    
+
     private $numberOfItemsInNextStage;
-    
+
     private $linear;
 
     /** @var array The brut assessment result from the engine */
     private $assesmentResult = [];
 
-//    /** @var ItemResult The item results retrieved from last cat engine call */
-//    private $itemResults;
-//
-//    /** @var TestResult The test results retrieved from last cat engine call */
-//    private $testResults;
+    /** @var ItemResult The item results retrieved from last cat engine call */
+    private $itemResults;
+
+    /** @var TestResult The test results retrieved from last cat engine call */
+    private $testResults;
 
     /** @var string The current session item id */
     private $currentItemId = null;
 
     private $sessionState;
-    
+
+    /**
+     * EchoAdaptSession constructor.
+     *
+     * @param $engine
+     * @param $sectionId
+     * @param $testTakerSessionId
+     * @param $nextItems
+     * @param $numberOfItemsInNextStage
+     * @param $linear
+     * @param $assesmentResult
+     * @param $sessionState
+     */
     public function __construct($engine, $sectionId, $testTakerSessionId, $nextItems, $numberOfItemsInNextStage, $linear, $assesmentResult, $sessionState)
     {
         $this->engine = $engine;
@@ -67,12 +79,9 @@ class EchoAdaptSession implements CatSession
         $this->numberOfItemsInNextStage = $numberOfItemsInNextStage;
         $this->linear = $linear;
         $this->sessionState = $sessionState;
-
         $this->assesmentResult = $assesmentResult;
-
-//        $this->setResults($assesmentResult);
     }
-    
+
     /**
      * (non-PHPdoc)
      * @see \oat\libCat\CatSession::getTestMap()
@@ -106,6 +115,9 @@ class EchoAdaptSession implements CatSession
      */
     public function getItemResults()
     {
+        if (!$this->itemResults) {
+            $this->prepareResults();
+        }
         return $this->itemResults;
     }
 
@@ -116,6 +128,9 @@ class EchoAdaptSession implements CatSession
      */
     public function getTestResults()
     {
+        if (!$this->testResults) {
+            $this->prepareResults();
+        }
         return $this->testResults;
     }
 
@@ -125,22 +140,21 @@ class EchoAdaptSession implements CatSession
      */
     public function jsonSerialize()
     {
-        \common_Logger::w(__METHOD__);
         return [
             'testTakerSessionId' => $this->testTakerSessionId,
             'nextItems' => $this->nextItems,
             'numberOfItemsInNextStage' => $this->numberOfItemsInNextStage,
             'linear' => $this->linear,
             'assesmentResult' => $this->assesmentResult,
-            'sessionState' => $this->sessionState
+            'sessionState' => $this->sessionState,
         ];
     }
-    
+
     /**
      * Get Test Taker Session Identifier.
-     * 
+     *
      * Returns the unique identifier representing both the Echo Adapt session and the test taker taking the session.
-     * 
+     *
      * @return string
      */
     public function getTestTakerSessionId()
@@ -149,15 +163,15 @@ class EchoAdaptSession implements CatSession
     }
 
     /**
-     * Set the result from Cat Engine
+     * Prepare the result to sort it by items and test
      *
      * Move item outcome variable from test to item result
      * Set the item, test and assesment results
      *
-     * @param array $result
      */
-    private function setResults(array $result = null)
+    private function prepareResults()
     {
+        $result = $this->assesmentResult;
         if (empty($result)) {
             return;
         }
@@ -176,8 +190,8 @@ class EchoAdaptSession implements CatSession
             }
         }
 
-//        $this->itemResults = new ItemResult($this->currentItemId, $this->restoreVariables($result['itemResults']));
-//        $this->testResults = new TestResult($this->restoreVariables($result['testResult']));
+        $this->itemResults = new ItemResult($this->currentItemId, $this->restoreVariables($result['itemResults']));
+        $this->testResults = new TestResult($this->restoreVariables($result['testResult']));
     }
 
     /**

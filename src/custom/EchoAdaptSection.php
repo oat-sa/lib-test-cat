@@ -80,6 +80,7 @@ class EchoAdaptSection implements CatSection
             ,$data['assesmentResult']
             ,$data['sessionState']
         );
+
         return $session;
     }
     

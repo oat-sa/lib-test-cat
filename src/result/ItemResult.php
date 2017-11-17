@@ -60,11 +60,6 @@ class ItemResult extends TestResult
      */
     public function jsonSerialize()
     {
-        return [
-            'identifier' => $this->itemRefId,
-            'outcomeVariables' => $this->variables
-        ];
-
         return array_merge(['identifier' => $this->itemRefId], parent::jsonSerialize());
     }
 

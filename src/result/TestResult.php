@@ -56,11 +56,7 @@ class TestResult implements \JsonSerializable
      * @see JsonSerializable::jsonSerialize()
      */
     public function jsonSerialize()
-    {        \common_Logger::w(__METHOD__);
-
-        return array(
-            'outcomeVariables' => $this->getVariables(),
-        );
+    {
         $variables = [];
         foreach ($this->getVariables() as $variable) {
             switch ($variable->getVariableType()) {

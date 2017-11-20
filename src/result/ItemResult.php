@@ -25,7 +25,7 @@ namespace oat\libCat\result;
  * 
  * @author Joel Bout, <joel@taotesting.com>
  */
-class ItemResult extends TestResult
+class ItemResult extends AbstractResult
 {
     /**
      * @var string The associated item id

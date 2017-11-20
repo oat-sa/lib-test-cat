@@ -26,54 +26,7 @@ namespace oat\libCat\result;
  *
  * @package oat\libCat\result
  */
-class TestResult implements \JsonSerializable
+class TestResult extends AbstractResult
 {
-    /** @var ResultVariable[] */
-    protected $variables;
 
-    /**
-     * TestResult constructor.
-     *
-     * @param $variables
-     */
-    public function __construct($variables)
-    {
-        $this->variables = is_array($variables) ? $variables : [$variables];
-    }
-
-    /**
-     * Returns the variables of the item
-     *
-     * @return ResultVariable[]
-     */
-    public function getVariables()
-    {
-        return $this->variables;
-    }
-
-    /**
-     * (non-PHPdoc)
-     * @see JsonSerializable::jsonSerialize()
-     */
-    public function jsonSerialize()
-    {
-        $variables = [];
-        foreach ($this->getVariables() as $variable) {
-            switch ($variable->getVariableType()) {
-                case ResultVariable::TEMPLATE_VARIABLE:
-                    $variables['templateVariables'][] = $variable;
-                    break;
-                case ResultVariable::RESPONSE_VARIABLE:
-                    $variables['responseVariables'][] = $variable;
-                    break;
-                case ResultVariable::TRACE_VARIABLE:
-                    $variables['traceVariables'][] = $variable;
-                    break;
-                case ResultVariable::OUTCOME_VARIABLE:
-                    $variables['outcomeVariables'][] = $variable;
-                    break;
-            }
-        }
-        return $variables;
-    }
 }

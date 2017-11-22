@@ -20,6 +20,7 @@
 namespace oat\libCat\custom;
 
 use oat\libCat\CatSession;
+use oat\libCat\exception\CatEngineConnectivityException;
 use oat\libCat\result\ResultVariable;
 use oat\libCat\result\ItemResult;
 
@@ -74,6 +75,10 @@ class EchoAdaptSession implements CatSession
                     "sessionState" => $this->sessionState
                 ]
             );
+
+            if (empty($data)) {
+                throw new CatEngineConnectivityException('Empty response from EchoAdapt engine');
+            }
 
             $this->nextItems = $data['nextItems'];
             $this->numberOfItemsInNextStage = $data['numberOfItemsInNextStage'];

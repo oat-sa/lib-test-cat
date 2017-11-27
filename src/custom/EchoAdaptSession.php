@@ -66,7 +66,7 @@ class EchoAdaptSession implements CatSession
      */
     public function getTestMap($results = [])
     {
-        if (!empty($results)) {
+        if (!empty($results) && $this->sessionState !== null) {
             $data = $this->engine->call(
                 'tests/'.$this->sectionId.'/test_taker_sessions/'.$this->testTakerSessionId.'/results',
                 'POST',
@@ -87,7 +87,7 @@ class EchoAdaptSession implements CatSession
             $this->sessionState = $data['sessionState'];
         }
 
-        return $this->nextItems;
+        return is_array($this->nextItems) ? $this->nextItems : [];
     }
     
     /**

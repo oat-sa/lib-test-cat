@@ -95,7 +95,6 @@ class EchoAdaptEngine implements CatEngine
 
         try {
             $response = $this->getEchoAdaptClient()->request($method, $this->buildUrl($url), $options);
-            \common_Logger::w($response->getStatusCode());
             return json_decode($response->getBody()->getContents(), true);
         } catch (\Exception $e) {
            throw new CatEngineConnectivityException('', 0, $e);

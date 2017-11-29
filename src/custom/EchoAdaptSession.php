@@ -126,7 +126,7 @@ class EchoAdaptSession implements CatSession
      *
      * @return TestResult
      */
-    public function getTestResults()
+    public function getTestResult()
     {
         if (!$this->testResult) {
             $this->prepareResults();

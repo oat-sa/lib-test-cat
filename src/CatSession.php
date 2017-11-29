@@ -45,7 +45,7 @@ interface CatSession extends \JsonSerializable
     /**
      * Get the result associated to the item
      *
-     * @return ItemResult
+     * @return ItemResult[]
      */
     public function getItemResults();
 
@@ -54,7 +54,7 @@ interface CatSession extends \JsonSerializable
      *
      * @return TestResult
      */
-    public function getTestResults();
+    public function getTestResult();
 
     /**
      * Get Test Taker Session Identifier.

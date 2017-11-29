@@ -111,6 +111,16 @@ class ResultVariable implements \JsonSerializable
     }
 
     /**
+     * Get the type of the current variable
+     *
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
      * (non-PHPdoc)
      * @see JsonSerializable::jsonSerialize()
      */

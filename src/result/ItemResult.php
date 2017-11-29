@@ -33,6 +33,26 @@ class ItemResult extends AbstractResult
     private $itemRefId;
 
     /**
+     * Unserialize an itemResult formatted as array
+     *
+     * @param array $data
+     * @return ItemResult
+     */
+    static public function restore(array $data)
+    {
+        $itemIdentifier = $data['identifier'];
+        $variables = [];
+
+        foreach ($data['variables'] as $variable) {
+            if (empty($variable)) {
+                continue;
+            }
+            $variables[] = ResultVariable::restore($variable);
+        }
+        return new self($itemIdentifier, $variables);
+    }
+
+    /**
      * ItemResult constructor.
      *
      * @param $itemRefId

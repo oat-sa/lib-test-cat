@@ -51,8 +51,10 @@ class EchoAdaptSection implements CatSection
         $data = $this->engine->call(
             'tests/'.$this->sectionId.'/test_taker_sessions',
             'POST',
-            ["initialEstimatedAbility" => ['0.0']]
+            EchoAdaptFormatter::format(["initialEstimatedAbility" => ['0.0']])
         );
+
+        $data = EchoAdaptFormatter::parse($data);
 
         return new EchoAdaptSession(
             $this->engine

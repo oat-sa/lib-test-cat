@@ -85,18 +85,27 @@ class EchoAdaptSession implements CatSession
     /**
      * (non-PHPdoc)
      * @see \oat\libCat\CatSession::getTestMap()
+     *
+     * @param array $results
+     * @return string[]
+     * @throws \oat\libCat\exception\CatEngineConnectivityException
      */
     public function getTestMap($results = [])
     {
         if (!empty($results)) {
+
+            $requestData = EchoAdaptFormatter::formatResultData([
+                "results" => $this->filterResults($results),
+                "sessionState" => $this->sessionState
+            ]);
+
             $data = $this->engine->call(
                 'tests/'.$this->sectionId.'/test_taker_sessions/'.$this->testTakerSessionId.'/results',
                 'POST',
-                [
-                    "results" => $this->filterResults($results),
-                    "sessionState" => $this->sessionState
-                ]
+                $requestData
             );
+
+            $data = EchoAdaptFormatter::parse($data);
 
             $this->nextItems = $data['nextItems'];
             $this->numberOfItemsInNextStage = $data['numberOfItemsInNextStage'];

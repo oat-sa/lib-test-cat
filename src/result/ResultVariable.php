@@ -103,7 +103,7 @@ class ResultVariable implements \JsonSerializable
     /**
      * Return the variable type
      *
-     * @return mixed
+     * @return string
      */
     public function getVariableType()
     {

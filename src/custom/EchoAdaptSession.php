@@ -20,6 +20,7 @@
 namespace oat\libCat\custom;
 
 use oat\libCat\CatSession;
+use oat\libCat\exception\CatEngineConnectivityException;
 use oat\libCat\result\ResultVariable;
 use oat\libCat\result\ItemResult;
 use oat\libCat\result\TestResult;
@@ -92,7 +93,7 @@ class EchoAdaptSession implements CatSession
      */
     public function getTestMap($results = [])
     {
-        if (!empty($results)) {
+        if (!empty($results) && $this->sessionState !== null) {
 
             $requestData = EchoAdaptFormatter::formatResultData([
                 "results" => $this->filterResults($results),
@@ -105,16 +106,20 @@ class EchoAdaptSession implements CatSession
                 $requestData
             );
 
+            if (empty($data)) {
+                throw new CatEngineConnectivityException('Empty response from EchoAdapt engine');
+            }
+
             $data = EchoAdaptFormatter::parse($data);
 
             $this->nextItems = $data['nextItems'];
             $this->numberOfItemsInNextStage = $data['numberOfItemsInNextStage'];
             $this->linear = $data['linear'];
-            $this->sessionState = $data['sessionState'];
             $this->assesmentResult = $data['assesmentResult'];
+            $this->sessionState = $data['sessionState'];
         }
 
-        return $this->nextItems;
+        return is_array($this->nextItems) ? $this->nextItems : [];
     }
 
     /**
@@ -155,7 +160,7 @@ class EchoAdaptSession implements CatSession
             'numberOfItemsInNextStage' => $this->numberOfItemsInNextStage,
             'linear' => $this->linear,
             'assesmentResult' => $this->assesmentResult,
-            'sessionState' => $this->sessionState,
+            'sessionState' => $this->sessionState
         ];
     }
 
@@ -266,26 +271,6 @@ class EchoAdaptSession implements CatSession
         }
 
         return $results;
-    }
-
-
-
-    /**
-     * (non-PHPdoc)
-     * @see \oat\libCat\CatSession::getResults()
-     */
-    public function getResults()
-    {
-        $variables = [];
-        $variableTypes = ["templateVariables", "responseVariables", "outcomeVariables"];
-        foreach ($variableTypes as $varType) {
-            if (isset($this->assesmentResult['testResult'][$varType])) {
-                foreach ($this->assesmentResult['testResult'][$varType] as $variable) {
-                    $variables[] = ResultVariable::restore($variable);
-                }
-            }
-        }
-        return $variables;
     }
 
 }

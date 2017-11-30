@@ -86,7 +86,8 @@ class EchoAdaptSection implements CatSection
     }
     
     public function getItemReferences() {
-        return $this->engine->call('tests/'.$this->sectionId.'/items');
+        $response = $this->engine->call('tests/'.$this->sectionId.'/items');
+        return json_decode($response, true);
     }
     
     public function jsonSerialize()

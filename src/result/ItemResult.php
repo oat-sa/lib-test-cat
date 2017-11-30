@@ -60,8 +60,8 @@ class ItemResult extends AbstractResult
      */
     public function __construct($itemRefId, $variables)
     {
-        $this->itemRefId = $itemRefId;
         parent::__construct($variables);
+        $this->itemRefId = $itemRefId;
     }
 
     /**

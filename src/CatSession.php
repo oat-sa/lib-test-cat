@@ -37,7 +37,7 @@ interface CatSession extends \JsonSerializable
      * This can modify the internal state of the session and requires
      * the session to be reserialized
      *
-     * @param array $results
+     * @param ItemResult[] $results
      * @return string[]
      */
     public function getTestMap($results = []);

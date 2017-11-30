@@ -80,9 +80,9 @@ class EchoAdaptEngine implements CatEngine
      * Helper to facilitate calls to the server. Wrap the call to EchoAdapt client.
      * Send the request to the server and return the decoded content.
      *
-     * @param $url
+     * @param string $url
      * @param string $method
-     * @param null $data
+     * @param string $data
      * @return string
      * @throws CatEngineConnectivityException
      */

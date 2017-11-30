@@ -1,19 +1,19 @@
 <?php
-/**  
+/**
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; under version 2
  * of the License (non-upgradable).
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- * 
+ *
  * Copyright (c) 2017 (original work) Open Assessment Technologies SA
  */
 
@@ -23,6 +23,7 @@ use oat\libCat\CatSession;
 use oat\libCat\exception\CatEngineConnectivityException;
 use oat\libCat\result\ResultVariable;
 use oat\libCat\result\ItemResult;
+use oat\libCat\result\TestResult;
 
 /**
  * Implementation of the Echoadapt session
@@ -33,21 +34,43 @@ class EchoAdaptSession implements CatSession
 {
     /** @var  EchoAdaptEngine */
     private $engine;
-    
+
     private $sectionId;
-    
+
     private $testTakerSessionId;
-    
+
     private $nextItems;
-    
+
     private $numberOfItemsInNextStage;
-    
+
     private $linear;
-    
-    private $assesmentResult;
-    
+
+    /** @var array The brut assessment result from the engine */
+    private $assesmentResult = [];
+
+    /** @var ItemResult[] The item results retrieved from last cat engine call */
+    private $itemResults;
+
+    /** @var TestResult The test result retrieved from last cat engine call */
+    private $testResult;
+
+    /** @var string The current session item id */
+    private $currentItemId = null;
+
     private $sessionState;
-    
+
+    /**
+     * EchoAdaptSession constructor.
+     *
+     * @param $engine
+     * @param $sectionId
+     * @param $testTakerSessionId
+     * @param $nextItems
+     * @param $numberOfItemsInNextStage
+     * @param $linear
+     * @param $assesmentResult
+     * @param $sessionState
+     */
     public function __construct($engine, $sectionId, $testTakerSessionId, $nextItems, $numberOfItemsInNextStage, $linear, $assesmentResult, $sessionState)
     {
         $this->engine = $engine;
@@ -59,26 +82,35 @@ class EchoAdaptSession implements CatSession
         $this->assesmentResult = $assesmentResult;
         $this->sessionState = $sessionState;
     }
-    
+
     /**
      * (non-PHPdoc)
      * @see \oat\libCat\CatSession::getTestMap()
+     *
+     * @param array $results
+     * @return string[]
+     * @throws \oat\libCat\exception\CatEngineConnectivityException
      */
     public function getTestMap($results = [])
     {
         if (!empty($results) && $this->sessionState !== null) {
+
+            $requestData = EchoAdaptFormatter::formatResultData([
+                "results" => $this->filterResults($results),
+                "sessionState" => $this->sessionState
+            ]);
+
             $data = $this->engine->call(
                 'tests/'.$this->sectionId.'/test_taker_sessions/'.$this->testTakerSessionId.'/results',
                 'POST',
-                [
-                    "results" => $this->filterResults($results),
-                    "sessionState" => $this->sessionState
-                ]
+                $requestData
             );
 
             if (empty($data)) {
                 throw new CatEngineConnectivityException('Empty response from EchoAdapt engine');
             }
+
+            $data = EchoAdaptFormatter::parse($data);
 
             $this->nextItems = $data['nextItems'];
             $this->numberOfItemsInNextStage = $data['numberOfItemsInNextStage'];
@@ -89,25 +121,33 @@ class EchoAdaptSession implements CatSession
 
         return is_array($this->nextItems) ? $this->nextItems : [];
     }
-    
+
     /**
-     * (non-PHPdoc)
-     * @see \oat\libCat\CatSession::getResults()
+     * Get the result associated to the item
+     *
+     * @return ItemResult[]
      */
-    public function getResults()
+    public function getItemResults()
     {
-        $variables = [];
-        $variableTypes = ["templateVariables", "responseVariables", "outcomeVariables"];
-        foreach ($variableTypes as $varType) {
-            if (isset($this->assesmentResult['testResult'][$varType])) {
-                foreach ($this->assesmentResult['testResult'][$varType] as $variable) {
-                    $variables[] = ResultVariable::restore($variable);
-                }
-            }
+        if (!$this->itemResults) {
+            $this->prepareResults();
         }
-        return $variables;
+        return $this->itemResults;
     }
-    
+
+    /**
+     * Get the result associated to the item
+     *
+     * @return TestResult
+     */
+    public function getTestResult()
+    {
+        if (!$this->testResult) {
+            $this->prepareResults();
+        }
+        return $this->testResult;
+    }
+
     /**
      * (non-PHPdoc)
      * @see JsonSerializable::jsonSerialize()
@@ -123,17 +163,89 @@ class EchoAdaptSession implements CatSession
             'sessionState' => $this->sessionState
         ];
     }
-    
+
     /**
      * Get Test Taker Session Identifier.
-     * 
+     *
      * Returns the unique identifier representing both the Echo Adapt session and the test taker taking the session.
-     * 
+     *
      * @return string
      */
     public function getTestTakerSessionId()
     {
         return $this->testTakerSessionId;
+    }
+
+    /**
+     * Prepare the result to sort it by items and test
+     *
+     * Move item outcome variable from test to item result
+     * Set the item, test and assesment results
+     *
+     */
+    private function prepareResults()
+    {
+        $result = $this->assesmentResult;
+        if (empty($result)) {
+            return;
+        }
+
+        /**
+         * Workaround to move item related variables to ItemResults from TestResult
+         */
+        foreach ($result['testResult'] as $variableType => $variables) {
+            if (!empty($variables)) {
+                foreach ($variables as $key => $misLocatedVariable) {
+                    if (strpos($misLocatedVariable['identifier'], 'CURRENT_') === 0) {
+                        $result['itemResults'][$variableType][] = $misLocatedVariable;
+                        unset($result['testResult'][$variableType][$key]);
+                    }
+                }
+            }
+        }
+
+        $this->itemResults = [new ItemResult($this->currentItemId, $this->restoreVariables($result['itemResults']))];
+        $this->testResult = new TestResult($this->restoreVariables($result['testResult']));
+    }
+
+    /**
+     * Unserialize variables array to Variable object
+     *
+     * @param array $result The incoming variables array (with first keys as types)
+     * @return array An simple array of ResultVariable objects with type set
+     */
+    private function restoreVariables(array $result)
+    {
+        $restoredVariables = [];
+
+        foreach ($result as $type => $variables) {
+            if (empty($variables)) {
+                continue;
+            }
+
+            switch ($type) {
+                case 'templateVariables':
+                    $variableType = ResultVariable::TEMPLATE_VARIABLE;
+                    break;
+                case 'responseVariables':
+                    $variableType = ResultVariable::RESPONSE_VARIABLE;
+                    break;
+                case 'traceVariables':
+                    $variableType = ResultVariable::TRACE_VARIABLE;
+                    break;
+                case 'outcomeVariables':
+                default:
+                    $variableType = ResultVariable::OUTCOME_VARIABLE;
+                    break;
+            }
+
+            foreach ($variables as $variable) {
+                $variable['variableType'] = $variableType;
+                $restoredVariables[] = ResultVariable::restore($variable);
+            }
+        }
+
+        return $restoredVariables;
     }
 
     /**
@@ -153,7 +265,12 @@ class EchoAdaptSession implements CatSession
             }
             $results[$key] = new ItemResult($result->getItemRefId(), $scoreOnly);
         }
+        // Get the last result as current item id
+        if (isset($result)) {
+            $this->currentItemId = $result->getItemRefId();
+        }
 
         return $results;
     }
+
 }

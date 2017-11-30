@@ -42,8 +42,8 @@ class ItemResult extends AbstractResult
     {
         $itemIdentifier = $data['identifier'];
         $variables = [];
-
-        foreach ($data['variables'] as $variable) {
+        $itemVariables = isset($data['outcomeVariables']) ? $data['outcomeVariables'] : $data['variables'];
+        foreach ($itemVariables as $variable) {
             if (empty($variable)) {
                 continue;
             }

@@ -106,7 +106,7 @@ class EchoAdaptEngine implements CatEngine
                 );
             }
 
-            return $response->getBody()->getContents();
+            return json_decode($response->getBody()->getContents(), true);
         } catch (\Exception $e) {
            throw new CatEngineConnectivityException('', 0, $e);
         }

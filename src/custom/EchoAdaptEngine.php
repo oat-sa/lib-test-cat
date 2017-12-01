@@ -83,7 +83,7 @@ class EchoAdaptEngine implements CatEngine
      * @param string $url
      * @param string $method
      * @param string $data
-     * @return string
+     * @return array
      * @throws CatEngineConnectivityException
      */
     public function call($url, $method = 'GET', $data = null)

@@ -96,5 +96,5 @@ class EchoAdaptFormatter
             'values' => $valueArray
         ];
     }
-    
+
 }

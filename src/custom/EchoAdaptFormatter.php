@@ -97,14 +97,4 @@ class EchoAdaptFormatter
         ];
     }
 
-    /**
-     * Unserialize a string by json decoding it
-     *
-     * @param $data
-     * @return mixed
-     */
-    static public function parse($data)
-    {
-        return json_decode($data, true);
-    }
 }

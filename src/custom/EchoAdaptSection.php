@@ -54,8 +54,6 @@ class EchoAdaptSection implements CatSection
             EchoAdaptFormatter::format(["initialEstimatedAbility" => ['0.0']])
         );
 
-        $data = EchoAdaptFormatter::parse($data);
-
         return new EchoAdaptSession(
             $this->engine
             ,$this->sectionId
@@ -85,9 +83,9 @@ class EchoAdaptSection implements CatSection
         return $session;
     }
     
-    public function getItemReferences() {
-        $response = $this->engine->call('tests/'.$this->sectionId.'/items');
-        return json_decode($response, true);
+    public function getItemReferences()
+    {
+        return $this->engine->call('tests/'.$this->sectionId.'/items');
     }
     
     public function jsonSerialize()

@@ -80,22 +80,33 @@ class EchoAdaptEngine implements CatEngine
      * Helper to facilitate calls to the server. Wrap the call to EchoAdapt client.
      * Send the request to the server and return the decoded content.
      *
-     * @param $url
+     * @param string $url
      * @param string $method
-     * @param array $data
-     * @return mixed
+     * @param string $data
+     * @return string
      * @throws CatEngineConnectivityException
      */
-    public function call($url, $method = 'GET', $data = [])
+    public function call($url, $method = 'GET', $data = null)
     {
-        $options = ['headers' => []];
-        if (!empty($data)) {
-            $options['body'] = json_encode($data);
-        }
-
         try {
+            $options = ['headers' => []];
+            if ($data != null) {
+                if (!is_string($data)) {
+                    throw new CatEngineException('The request body has to a string to request the url ' . $this->buildUrl($url));
+                }
+                $options['body'] = $data;
+            }
+
             $response = $this->getEchoAdaptClient()->request($method, $this->buildUrl($url), $options);
-            return json_decode($response->getBody()->getContents(), true);
+
+            if ($response->getStatusCode() != 200) {
+                throw new CatEngineException(
+                    'The CAT engine server cannot handle the request to ' . $this->buildUrl($url) .
+                    isset($options['body']) ? ' with data (' . $options['body'] . ')' : ' (No body data)'
+                );
+            }
+
+            return $response->getBody()->getContents();
         } catch (\Exception $e) {
            throw new CatEngineConnectivityException('', 0, $e);
         }

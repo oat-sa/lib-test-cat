@@ -110,8 +110,6 @@ class EchoAdaptSession implements CatSession
                 throw new CatEngineConnectivityException('Empty response from EchoAdapt engine');
             }
 
-            $data = EchoAdaptFormatter::parse($data);
-
             $this->nextItems = $data['nextItems'];
             $this->numberOfItemsInNextStage = $data['numberOfItemsInNextStage'];
             $this->linear = $data['linear'];

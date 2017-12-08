@@ -202,7 +202,12 @@ class EchoAdaptSession implements CatSession
             }
         }
 
-        $this->itemResults = [new ItemResult($this->currentItemId, $this->restoreVariables($result['itemResults']))];
+        if (is_null($this->currentItemId)) {
+            $this->itemResults = [];
+        } else {
+            $this->itemResults = [new ItemResult($this->currentItemId, $this->restoreVariables($result['itemResults']))];
+        }
+
         $this->testResult = new TestResult($this->restoreVariables($result['testResult']));
     }
 

@@ -102,7 +102,7 @@ class EchoAdaptEngine implements CatEngine
             if ($response->getStatusCode() != 200) {
                 throw new CatEngineException(
                     'The CAT engine server cannot handle the request to ' . $this->buildUrl($url) .
-                    isset($options['body']) ? ' with data (' . $options['body'] . ')' : ' (No body data)'
+                    (isset($options['body']) ? ' with data (' . $options['body'] . ')' : ' (No body data)')
                 );
             }
 

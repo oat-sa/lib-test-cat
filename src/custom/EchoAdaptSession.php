@@ -64,23 +64,18 @@ class EchoAdaptSession implements CatSession
      *
      * @param $engine
      * @param $sectionId
-     * @param $testTakerSessionId
-     * @param $nextItems
-     * @param $numberOfItemsInNextStage
-     * @param $linear
-     * @param $assesmentResult
-     * @param $sessionState
+     * @param $data
      */
-    public function __construct($engine, $sectionId, $testTakerSessionId, $nextItems, $numberOfItemsInNextStage, $linear, $assesmentResult, $sessionState)
+    public function __construct($engine, $sectionId, $data)
     {
         $this->engine = $engine;
         $this->sectionId = $sectionId;
-        $this->testTakerSessionId = $testTakerSessionId;
-        $this->nextItems = $nextItems;
-        $this->numberOfItemsInNextStage = $numberOfItemsInNextStage;
-        $this->linear = $linear;
-        $this->assesmentResult = $assesmentResult;
-        $this->sessionState = $sessionState;
+        $this->testTakerSessionId = $data['testTakerSessionId'];
+        $this->nextItems = $data['nextItems'];
+        $this->numberOfItemsInNextStage = $data['numberOfItemsInNextStage'];
+        $this->linear = $data['linear'];
+        $this->assesmentResult = $data['assesmentResult'];
+        $this->sessionState = $data['sessionState'];
     }
 
     /**

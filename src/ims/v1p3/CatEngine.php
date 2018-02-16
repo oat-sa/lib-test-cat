@@ -1,65 +1,52 @@
 <?php
-/**
+/**  
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; under version 2
  * of the License (non-upgradable).
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- *
- * Copyright (c) 2017 (original work) Open Assessment Technologies SA
+ * 
+ * Copyright (c) 2018 (original work) Open Assessment Technologies SA
  */
 
-namespace oat\libCat\custom;
+namespace oat\libCat\ims\v1p3;
 
 use GuzzleHttp\ClientInterface;
-use oat\libCat\CatEngine;
+use oat\libCat\CatEngine as CatEngineInterface;
 use oat\libCat\exception\CatEngineConnectivityException;
 use oat\libCat\exception\CatEngineException;
 use oat\libCat\AbstractCatEngine;
 
 /**
- * Implementation of the EchoAdapt engine
- *
- * @author Joel Bout, <joel@taotesting.com>
+ * Implementation of the IMS CAT API v1.3 engine
  */
-class EchoAdaptEngine extends AbstractCatEngine
+class CatEngine extends AbstractCatEngine
 {
-
-    /**
-     * @inheritdoc
-     */
-    public function call($url, $method = 'GET', $data = null)
-    {
-        return parent::call($url, $method, $data);
-    }
-
     /**
      * @inheritdoc
      */
     protected function createSection($adaptiveSettingsRef, $qtiUsageData = null, $qtiMetaData = null)
     {
-        return new EchoAdaptSection($this, $adaptiveSettingsRef);
+        return new CatSection($this, $adaptiveSettingsRef, $qtiUsageData, $qtiMetaData);
     }
 
     /**
      * (non-PHPdoc)
      * @see \oat\libCat\CatEngine::restoreSection()
      */
-    public function restoreSection($jsonString)
+    public function restoreSection($data)
     {
-        $identifier = json_decode($jsonString);
-        if (!is_numeric($identifier)) {
-            throw new CatEngineException('Unable to restore EchoAdaptSection');
+        if (is_string($data)) {
+            $data = json_decode($data);
         }
-        return $this->createSection($identifier);
+        return $this->createSection($data['adaptiveSettingsRef'], $data['qtiUsagedataRef'], $data['qtiMetadataRef'], $data['sectionId']);
     }
-
 }

@@ -62,7 +62,7 @@ abstract class AbstractCatEngine implements CatEngine
     {
         return $this->createSection($configuration, $qtiUsageData, $qtiMetaData);
     }
-    
+
     /**
      * (non-PHPdoc)
      * @see \oat\libCat\CatEngine::restoreSection()
@@ -92,7 +92,7 @@ abstract class AbstractCatEngine implements CatEngine
 
             $response = $this->getEchoAdaptClient()->request($method, $this->buildUrl($url), $options);
 
-            if ($response->getStatusCode() != 200) {
+            if ($response->getStatusCode() != 200 && $response->getStatusCode() != 201) {
                 throw new CatEngineException(
                     'The CAT engine server cannot handle the request to ' . $this->buildUrl($url) .
                     (isset($options['body']) ? ' with data (' . $options['body'] . ')' : ' (No body data)')

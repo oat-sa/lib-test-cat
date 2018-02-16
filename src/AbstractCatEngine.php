@@ -90,7 +90,7 @@ abstract class AbstractCatEngine implements CatEngine
                 $options['body'] = $data;
             }
 
-            $response = $this->getEchoAdaptClient()->request($method, $this->buildUrl($url), $options);
+            $response = $this->getCatClient()->request($method, $this->buildUrl($url), $options);
 
             if ($response->getStatusCode() != 200) {
                 throw new CatEngineException(
@@ -106,11 +106,11 @@ abstract class AbstractCatEngine implements CatEngine
     }
 
     /**
-     * Get the EchoAdapt client.
+     * Get the CAT client.
      *
      * @return ClientInterface
      */
-    protected function getEchoAdaptClient()
+    protected function getCatClient()
     {
         return $this->client;
     }

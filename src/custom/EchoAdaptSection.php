@@ -20,6 +20,7 @@
 namespace oat\libCat\custom;
 
 use oat\libCat\CatSection;
+use oat\libCat\AbstractCatSection;
 use function GuzzleHttp\json_decode;
 
 /**
@@ -27,74 +28,44 @@ use function GuzzleHttp\json_decode;
  *
  * @author Joel Bout, <joel@taotesting.com>
  */
-class EchoAdaptSection implements CatSection
+class EchoAdaptSection extends AbstractCatSection
 {
-    /**
-     * @var EchoAdaptEngine
-     */
-    private $engine;
-    
-    private $sectionId;
-    
-    public function __construct($engine, $sectionId) {
-        $this->engine = $engine;
-        $this->sectionId = $sectionId;
-    }
-    
-    /**
-     * 
-     * @param string $priorData
-     * @return \oat\libCat\custom\EchoAdaptSession
-     */
-    public function initSession($priorData = null)
-    {
-        $data = $this->engine->call(
-            'tests/'.$this->sectionId.'/test_taker_sessions',
-            'POST',
-            EchoAdaptFormatter::format(["initialEstimatedAbility" => ['0.0']])
-        );
 
-        return new EchoAdaptSession(
-            $this->engine
-            ,$this->sectionId
-            ,$data['testTakerSessionId']
-            ,$data['nextItems']
-            ,$data['numberOfItemsInNextStage']
-            ,$data['linear']
-            ,$data['assesmentResult']
-            ,$data['sessionState']
-        );
-    }
-    
-
-    public function restoreSession($jsonString)
-    {
-        $data = json_decode($jsonString, true);
-        $session = new EchoAdaptSession(
-            $this->engine
-            ,$this->sectionId
-            ,$data['testTakerSessionId']
-            ,$data['nextItems']
-            ,$data['numberOfItemsInNextStage']
-            ,$data['linear']
-            ,$data['assesmentResult']
-            ,$data['sessionState']
-        );
-        return $session;
-    }
-    
+    /**
+     * Note: this is not part of IMS CAT API standard
+     * @return mixed
+     */
     public function getItemReferences()
     {
-        return $this->engine->call('tests/'.$this->sectionId.'/items');
+        return $this->engine->call('tests/'.$this->getSectionId().'/items');
     }
     
     public function jsonSerialize()
     {
-        return $this->sectionId;
+        return $this->settings;
     }
     
     public function getSectionId()
     {
-        return $this->sectionId;
+        return $this->settings;
+    }
+
+    public function initSession($configurationData = [])
+    {
+        return parent::initSession(EchoAdaptFormatter::format(["initialEstimatedAbility" => ['0.0']]));
+    }
+
+    protected function createSession(array $data)
+    {
+        return new EchoAdaptSession(
+            $this->engine,
+            $this->getSectionId(),
+            $data
+        );
+    }
+
+    protected function getInitUrl()
+    {
+        return 'tests/'.$this->getSectionId().'/test_taker_sessions';
     }
 }

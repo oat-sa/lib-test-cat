@@ -26,13 +26,14 @@ abstract class AbstractResult implements \JsonSerializable
     protected $variables;
 
     /**
-     * TestResult constructor.
+     * AbstractResult constructor.
      *
      * @param $variables
      */
-    public function __construct($variables)
+    public function __construct($variables, $timestamp = null)
     {
         $this->variables = is_array($variables) ? $variables : [$variables];
+        $this->timestamp = $timestamp;
     }
 
     /**
@@ -46,12 +47,25 @@ abstract class AbstractResult implements \JsonSerializable
     }
 
     /**
+     * The date stamp of when this result was recorded.
+     *
+     * @return numeric
+     */
+    public function getTimestamp()
+    {
+        return $this->timestamp;
+    }
+
+    /**
      * (non-PHPdoc)
      * @see JsonSerializable::jsonSerialize()
      */
     public function jsonSerialize()
     {
-        return ['variables' => $this->getVariables()];
+        return [
+            'variables' => $this->getVariables(),
+            'timestamp' => $this->getTimestamp(),
+        ];
     }
 
 }

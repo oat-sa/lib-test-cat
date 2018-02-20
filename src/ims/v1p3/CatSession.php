@@ -25,6 +25,7 @@ use oat\libCat\ims\v1p3\CatEngine;
 use oat\libCat\result\ResultVariable;
 use oat\libCat\result\ItemResult;
 use oat\libCat\result\TestResult;
+use oat\libCat\result\AbstractResult;
 
 /**
  * Implementation of the CatSession session
@@ -43,7 +44,7 @@ class CatSession implements CatSessionInterface
     private $stageLength;
 
     /** @var array The brut assessment result from the engine */
-    private $assesmentResult = [];
+    private $assessmentResult = [];
 
     /** @var ItemResult[] The item results retrieved from last cat engine call */
     private $itemResults;
@@ -56,6 +57,9 @@ class CatSession implements CatSessionInterface
 
     private $sessionState;
 
+    /** @var SessionContext  */
+    private $context;
+
     /**
      * CatSession constructor.
      *
@@ -63,36 +67,40 @@ class CatSession implements CatSessionInterface
      * @param $settings
      * @param $data
      */
-    public function __construct($engine, $sectionId, $data)
+    public function __construct($engine, $sectionId, $data, SessionContext $context)
     {
         $this->engine = $engine;
         $this->sectionId = $sectionId;
         $this->sessionIdentifier = $data['sessionIdentifier'];
         $this->nextItems = $data['nextItems']['itemIdentifiers'];
         $this->stageLength = $data['nextItems']['stageLength'];
-        //$this->assesmentResult = isset($data['assesmentResult']) ? $data['assesmentResult'] : [];
+        $this->assessmentResult = isset($data['assessmentResult']) ? $data['assessmentResult'] : [];
         $this->sessionState = $data['sessionState'];
+        $this->context = $context;
     }
 
     /**
      * (non-PHPdoc)
      * @see \oat\libCat\CatSession::getTestMap()
      *
-     * @param array $results
+     * @param AbstractResult[] $results
      * @return string[]
      * @throws \oat\libCat\exception\CatEngineConnectivityException
      */
     public function getTestMap($results = [])
     {
         if (!empty($results) && $this->sessionState !== null) {
-
+            $context = [];
             $requestData = ResultFormatter::formatResultData([
-                "results" => $this->filterResults($results),
-                "sessionState" => $this->sessionState
+                'assessmentResult' => [
+                    'context' => $this->context,
+                    'itemResult' => $this->filterItemResults($results),
+                ],
+                'sessionState' => $this->sessionState
             ]);
 
             $data = $this->engine->call(
-                'sections/'.$this->sectionId.'/sessions/'.$this->sessionIdentifier,
+                'sections/'.$this->sectionId.'/sessions/'.$this->sessionIdentifier.'/results',
                 'POST',
                 $requestData
             );
@@ -103,7 +111,9 @@ class CatSession implements CatSessionInterface
 
             $this->nextItems = $data['nextItems']['itemIdentifiers'];
             $this->stageLength = $data['nextItems']['stageLength'];
-            //$this->assesmentResult = $data['assesmentResult'];
+            if (isset($data['assessmentResult'])) {
+                $this->assessmentResult = $data['assessmentResult'];
+            }
             $this->sessionState = $data['sessionState'];
         }
 
@@ -143,13 +153,16 @@ class CatSession implements CatSessionInterface
     public function jsonSerialize()
     {
         return [
-            'sessionIdentifier' => $this->sessionIdentifier,
-            'nextItems' => [
-                'itemIdentifiers' => $this->nextItems,
-                'stageLength' => $this->stageLength,
+            'data' => [
+                'sessionIdentifier' => $this->sessionIdentifier,
+                'nextItems' => [
+                    'itemIdentifiers' => $this->nextItems,
+                    'stageLength' => $this->stageLength,
+                ],
+                'assessmentResult' => $this->assessmentResult,
+                'sessionState' => $this->sessionState,
             ],
-            //'assesmentResult' => $this->assesmentResult,
-            'sessionState' => $this->sessionState
+            'context' => $this->context
         ];
     }
 
@@ -169,13 +182,14 @@ class CatSession implements CatSessionInterface
      * Prepare the result to sort it by items and test
      *
      * Move item outcome variable from test to item result
-     * Set the item, test and assesment results
+     * Set the item, test and assessment results
      *
      */
     private function prepareResults()
     {
-        $result = $this->assesmentResult;
+        $result = $this->assessmentResult;
         if (empty($result)) {
+            $this->itemResults = [];
             return;
         }
 
@@ -193,7 +207,7 @@ class CatSession implements CatSessionInterface
             }
         }
 
-        if (is_null($this->currentItemId)) {
+        if (is_null($this->currentItemId) || !isset($result['itemResults'])) {
             $this->itemResults = [];
         } else {
             $this->itemResults = [new ItemResult($this->currentItemId, $this->restoreVariables($result['itemResults']))];
@@ -235,6 +249,12 @@ class CatSession implements CatSessionInterface
 
             foreach ($variables as $variable) {
                 $variable['variableType'] = $variableType;
+                $variable['values'] = $variable['value'];
+                unset($variable['value']);
+                foreach ($variable['values'] as &$val) {
+                    $val['valueString'] = $val['value'];
+                    unset($val['value']);
+                }
                 $restoredVariables[] = ResultVariable::restore($variable);
             }
         }
@@ -248,7 +268,7 @@ class CatSession implements CatSessionInterface
      * @param ItemResult[] $results
      * @return ItemResult[]
      */
-    private function filterResults($results)
+    private function filterItemResults($results)
     {
         foreach ($results as $key => $result) {
             $scoreOnly = [];
@@ -257,7 +277,7 @@ class CatSession implements CatSessionInterface
                     $scoreOnly[] = $variable;
                 }
             }
-            $results[$key] = new ItemResult($result->getItemRefId(), $scoreOnly);
+            $results[$key] = new ItemResult($result->getItemRefId(), $scoreOnly, $result->getTimestamp());
         }
         // Get the last result as current item id
         if (isset($result)) {

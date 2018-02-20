@@ -49,7 +49,7 @@ class ItemResult extends AbstractResult
             }
             $variables[] = ResultVariable::restore($variable);
         }
-        return new self($itemIdentifier, $variables);
+        return new self($itemIdentifier, $variables, $data['timestamp']);
     }
 
     /**
@@ -57,10 +57,11 @@ class ItemResult extends AbstractResult
      *
      * @param $itemRefId
      * @param $variables
+     * @param $timestamp
      */
-    public function __construct($itemRefId, $variables)
+    public function __construct($itemRefId, $variables, $timestamp = null)
     {
-        parent::__construct($variables);
+        parent::__construct($variables, $timestamp);
         $this->itemRefId = $itemRefId;
     }
 

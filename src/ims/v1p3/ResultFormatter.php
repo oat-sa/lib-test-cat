@@ -21,6 +21,7 @@ namespace oat\libCat\ims\v1p3;
 
 use oat\libCat\result\ItemResult;
 use oat\libCat\result\ResultVariable;
+use oat\dtms\DateTime;
 
 class ResultFormatter
 {
@@ -32,32 +33,41 @@ class ResultFormatter
      */
     static public function formatResultData(array $data)
     {
-        if (isset($data['results'])) {
-            foreach ($data['results'] as $key => $result) {
+        if (isset($data['assessmentResult'])) {
+            $itemResults = [];
+            foreach ($data['assessmentResult']['itemResult'] as $key => $result) {
                 if ($result instanceof ItemResult) {
-                    $variables = [];
+                    $time = DateTime::createFromFormat('U.u', $result->getTimestamp());
+                    $itemResult = [
+                        'identifier' => $result->getItemRefId(),
+                        //'sequenceIndex' => $key+1, //todo: check this value. maybe not required
+                        'datestamp' => $time->format(DateTime::ISO8601),
+                        'sessionStatus' => 'FINAL',//todo: check this value
+                    ];
                     foreach ($result->getVariables() as $variable) {
 
                         $formattedVariable = self::formatVariable($variable);
 
                         switch ($variable->getVariableType()) {
                             case ResultVariable::TEMPLATE_VARIABLE:
-                                $variables['templateVariables'][] = $formattedVariable;
+                                $itemResult['templateVariables'][] = $formattedVariable;
                                 break;
                             case ResultVariable::RESPONSE_VARIABLE:
-                                $variables['responseVariables'][] = $formattedVariable;
+                                $itemResult['responseVariables'][] = $formattedVariable;
                                 break;
                             case ResultVariable::TRACE_VARIABLE:
-                                $variables['traceVariables'][] = $formattedVariable;
+                                $itemResult['traceVariables'][] = $formattedVariable;
                                 break;
                             case ResultVariable::OUTCOME_VARIABLE:
-                                $variables['outcomeVariables'][] = $formattedVariable;
+                                $itemResult['outcomeVariables'][] = $formattedVariable;
                                 break;
                         }
                     }
 
-                    $data['results'][$key] = array_merge(['identifier' => $result->getItemRefId()], $variables);
+                    $itemResults[] = $itemResult;
+
                 }
+                $data['assessmentResult']['itemResult'] = $itemResults;
             }
         }
 
@@ -79,6 +89,7 @@ class ResultFormatter
      * Format a variable to have an array that represente a ResultVariable
      *
      * @param ResultVariable $variable
+     * @param ItemResult $result
      * @return array
      */
     static protected function formatVariable(ResultVariable $variable)
@@ -87,13 +98,14 @@ class ResultFormatter
         $valueArray = [];
         foreach ($values as $val) {
             $valueArray[] = [
-                "baseType" => $variable->getType(),
-                "valueString" => $val
+                "baseType" => strtoupper($variable->getType()),
+                "value" => $val
             ];
         }
         return [
             'identifier' => $variable->getId(),
-            'values' => $valueArray
+            'cardinality' => $variable->getCardinality(),
+            'value' => $valueArray
         ];
     }
 

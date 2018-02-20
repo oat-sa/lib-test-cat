@@ -92,7 +92,7 @@ abstract class AbstractCatEngine implements CatEngine
 
             $response = $this->getCatClient()->request($method, $this->buildUrl($url), $options);
 
-            if ($response->getStatusCode() != 200 && $response->getStatusCode() != 201) {
+            if (!preg_match('/2\d\d/', (string) $response->getStatusCode())) {
                 throw new CatEngineException(
                     'The CAT engine server cannot handle the request to ' . $this->buildUrl($url) .
                     (isset($options['body']) ? ' with data (' . $options['body'] . ')' : ' (No body data)')

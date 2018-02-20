@@ -32,7 +32,7 @@ interface CatSection extends \JsonSerializable
      * @param mixed $configurationData
      * @return CatSession
      */
-    public function initSession($configurationData = []);
+    public function initSession($configurationData = [], $context = []);
     
     /**
      * Restore a serialised session of the current section

@@ -22,6 +22,7 @@ namespace oat\libCat\ims\v1p3;
 use oat\libCat\CatEngine;
 use oat\libCat\CatSection as CatSectionInterface;
 use oat\libCat\AbstractCatSection;
+use oat\libCat\exception\CatEngineException;
 use function GuzzleHttp\json_decode;
 
 /**
@@ -61,6 +62,9 @@ class CatSection extends AbstractCatSection
         }
     }
 
+    /**
+     * @return array|mixed
+     */
     public function jsonSerialize()
     {
         return [
@@ -71,27 +75,62 @@ class CatSection extends AbstractCatSection
         ];
     }
 
+    /**
+     * @return string
+     */
     public function getSectionId()
     {
         return $this->settings;
     }
 
-    public function initSession($configurationData = [])
+    /**
+     * @param array $configurationData
+     * @param array $context
+     * @return CatSession
+     */
+    public function initSession($configurationData = [], $context = [])
     {
         /** TODO: probably this is ACT specific */
         $configurationData['priorData'][] = $this->formatKVdata(["initialEstimatedAbility" => '0.0']);
-        return parent::initSession(ResultFormatter::format($configurationData));
+
+        $data = $this->engine->call(
+            $this->getInitUrl(),
+            'POST',
+            ResultFormatter::format($configurationData)
+        );
+
+        return $this->createSession($data, new SessionContext($context));
     }
 
-    protected function createSession(array $data)
+    /**
+     * @param string $jsonString
+     * @return CatSession
+     */
+    public function restoreSession($jsonString)
+    {
+        $data = json_decode($jsonString, true);
+        $context = isset($data['context']) ? new SessionContext($data['context']) : null;
+        return $this->createSession($data['data'], $context);
+    }
+
+    /**
+     * @param array $data
+     * @param SessionContext $context
+     * @return \oat\libCat\CatSession|CatSession
+     */
+    protected function createSession(array $data, SessionContext $context = null)
     {
         return new CatSession(
             $this->engine,
             $this->getSectionId(),
-            $data
+            $data,
+            $context
         );
     }
 
+    /**
+     * @return string
+     */
     protected function getInitUrl()
     {
         return 'sections/'.$this->getSectionId().'/sessions';

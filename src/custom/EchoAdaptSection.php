@@ -50,7 +50,7 @@ class EchoAdaptSection extends AbstractCatSection
         return $this->settings;
     }
 
-    public function initSession($configurationData = [])
+    public function initSession($configurationData = [], $context = [])
     {
         return parent::initSession(EchoAdaptFormatter::format(["initialEstimatedAbility" => ['0.0']]));
     }

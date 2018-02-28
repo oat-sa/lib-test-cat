@@ -28,13 +28,11 @@ interface CatSection extends \JsonSerializable
 {
     /**
      * Initialize a session for an adaptive section.
-     * The priorData data format is implementation
-     * specific and not covered by the standard.
-     * 
-     * @param mixed $priorData
+     *
+     * @param mixed $configurationData
      * @return CatSession
      */
-    public function initSession($priorData = null);
+    public function initSession($configurationData = [], $context = []);
     
     /**
      * Restore a serialised session of the current section

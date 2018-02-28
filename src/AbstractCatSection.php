@@ -58,7 +58,7 @@ abstract class AbstractCatSection implements CatSection
      * @param string $configurationData
      * @return CatSession
      */
-    public function initSession($configurationData = [])
+    public function initSession($configurationData = [], $context = [])
     {
         $data = $this->engine->call(
             $this->getInitUrl(),

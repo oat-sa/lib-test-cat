@@ -39,6 +39,8 @@ class ResultVariable implements \JsonSerializable
 
     private $variableType;
 
+    private $cardinality;
+
     /**
      * Create a ResultVariable from the json array
      *
@@ -59,7 +61,9 @@ class ResultVariable implements \JsonSerializable
             $values = reset($values);
         }
         $variableType = isset($array['variableType']) ? $array['variableType'] : self::OUTCOME_VARIABLE;
-        $return = new static($array["identifier"], $value['baseType'], $values, $variableType);
+        $cardinality = isset($array['cardinality']) ? $array['cardinality'] : 0;
+
+        $return = new static($array["identifier"], $value['baseType'], $values, $variableType, $cardinality);
 
         return $return;
     }
@@ -72,11 +76,12 @@ class ResultVariable implements \JsonSerializable
      * @param $value
      * @param string $variableType
      */
-    public function __construct($identifier, $type, $value, $variableType = self::OUTCOME_VARIABLE)
+    public function __construct($identifier, $type, $value, $variableType = self::OUTCOME_VARIABLE, $cardinality = 0)
     {
         $this->identifier = $identifier;
         $this->type = $type;
         $this->value = $value;
+        $this->cardinality = $cardinality;
         $this->setVariableType($variableType);
     }
 
@@ -111,6 +116,14 @@ class ResultVariable implements \JsonSerializable
     }
 
     /**
+     * @return int
+     */
+    public function getCardinality()
+    {
+        return $this->cardinality;
+    }
+
+    /**
      * Get the type of the current variable
      *
      * @return string
@@ -136,6 +149,8 @@ class ResultVariable implements \JsonSerializable
         }
         return [
             'identifier' => $this->identifier,
+            'cardinality' => $this->cardinality,
+            'variableType' => $this->variableType,
             'values' => $valueArray
         ];
     }

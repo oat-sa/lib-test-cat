@@ -20,7 +20,6 @@
 namespace oat\libCat\ims\v1p3;
 
 use oat\libCat\CatEngine;
-use oat\libCat\CatSection as CatSectionInterface;
 use oat\libCat\AbstractCatSection;
 use oat\libCat\exception\CatEngineException;
 use function GuzzleHttp\json_decode;
@@ -80,7 +79,7 @@ class CatSection extends AbstractCatSection
      */
     public function getSectionId()
     {
-        return $this->settings;
+        return $this->sectionId;
     }
 
     /**

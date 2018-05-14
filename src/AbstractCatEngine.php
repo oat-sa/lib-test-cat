@@ -82,7 +82,7 @@ abstract class AbstractCatEngine implements CatEngine
     public function call($url, $method = 'POST', $data = null)
     {
         try {
-            $options = ['headers' => []];
+            $options = ['headers' => ['Content-Type' => 'application/json']];
             if ($data != null) {
                 if (!is_string($data)) {
                     throw new CatEngineException('The request body has to a string to request the url ' . $this->buildUrl($url));

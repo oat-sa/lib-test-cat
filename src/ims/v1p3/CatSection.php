@@ -19,7 +19,7 @@
 
 namespace oat\libCat\ims\v1p3;
 
-use oat\libCat\CatEngine;
+use oat\libCat\CatEngine as CatEngineInterface;
 use oat\libCat\AbstractCatSection;
 use oat\libCat\exception\CatEngineException;
 use function GuzzleHttp\json_decode;
@@ -40,7 +40,7 @@ class CatSection extends AbstractCatSection
      * @param string $qtiMetaData
      * @param string $sectionId
      */
-    public function __construct(CatEngine $engine, $settings, $qtiUsageData = null, $qtiMetaData = null, $sectionId = null)
+    public function __construct(CatEngineInterface $engine, $settings, $qtiUsageData = null, $qtiMetaData = null, $sectionId = null)
     {
         parent::__construct($engine, $settings, $qtiUsageData, $qtiMetaData);
         $this->sectionId = $sectionId;

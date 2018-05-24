@@ -21,7 +21,6 @@ namespace oat\libCat\ims\v1p3;
 
 use oat\libCat\CatSession as CatSessionInterface;
 use oat\libCat\exception\CatEngineConnectivityException;
-use oat\libCat\ims\v1p3\CatEngine;
 use oat\libCat\result\ResultVariable;
 use oat\libCat\result\ItemResult;
 use oat\libCat\result\TestResult;
@@ -148,7 +147,7 @@ class CatSession implements CatSessionInterface
 
     /**
      * (non-PHPdoc)
-     * @see JsonSerializable::jsonSerialize()
+     * @see \JsonSerializable::jsonSerialize()
      */
     public function jsonSerialize()
     {
@@ -196,8 +195,8 @@ class CatSession implements CatSessionInterface
         /**
          * Workaround to move item related variables to ItemResults from TestResult
          */
-        foreach ($result['testResult'] as $variableType => $variables) {
-            if (!empty($variables)) {
+        if (is_array($result['testResult'])) {
+            foreach ($result['testResult'] as $variableType => $variables) {
                 foreach ($variables as $key => $misLocatedVariable) {
                     if (strpos($misLocatedVariable['identifier'], 'CURRENT_') === 0) {
                         $result['itemResults'][$variableType][] = $misLocatedVariable;
@@ -205,6 +204,9 @@ class CatSession implements CatSessionInterface
                     }
                 }
             }
+            $this->testResult = new TestResult($this->restoreVariables($result['testResult']));
+        } else {
+            $this->testResult = [];
         }
 
         if (is_null($this->currentItemId) || !isset($result['itemResults'])) {
@@ -212,8 +214,6 @@ class CatSession implements CatSessionInterface
         } else {
             $this->itemResults = [new ItemResult($this->currentItemId, $this->restoreVariables($result['itemResults']))];
         }
-
-        $this->testResult = new TestResult($this->restoreVariables($result['testResult']));
     }
 
     /**

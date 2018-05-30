@@ -197,10 +197,12 @@ class CatSession implements CatSessionInterface
          */
         if (is_array($result['testResult'])) {
             foreach ($result['testResult'] as $variableType => $variables) {
-                foreach ($variables as $key => $misLocatedVariable) {
-                    if (strpos($misLocatedVariable['identifier'], 'CURRENT_') === 0) {
-                        $result['itemResults'][$variableType][] = $misLocatedVariable;
-                        unset($result['testResult'][$variableType][$key]);
+                if (!empty($variables)) {
+                    foreach ($variables as $key => $misLocatedVariable) {
+                        if (strpos($misLocatedVariable['identifier'], 'CURRENT_') === 0) {
+                            $result['itemResults'][$variableType][] = $misLocatedVariable;
+                            unset($result['testResult'][$variableType][$key]);
+                        }
                     }
                 }
             }

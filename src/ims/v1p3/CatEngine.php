@@ -19,10 +19,6 @@
 
 namespace oat\libCat\ims\v1p3;
 
-use GuzzleHttp\ClientInterface;
-use oat\libCat\CatEngine as CatEngineInterface;
-use oat\libCat\exception\CatEngineConnectivityException;
-use oat\libCat\exception\CatEngineException;
 use oat\libCat\AbstractCatEngine;
 
 /**
@@ -47,6 +43,6 @@ class CatEngine extends AbstractCatEngine
         if (is_string($data)) {
             $data = json_decode($data);
         }
-        return $this->createSection($data['adaptiveSettingsRef'], $data['qtiUsagedataRef'], $data['qtiMetadataRef'], $data['sectionId']);
+        return new CatSection($this, $data['adaptiveSettingsRef'], $data['qtiUsagedataRef'], $data['qtiMetadataRef'], $data['sectionId']);
     }
 }

@@ -123,7 +123,11 @@ abstract class AbstractCatEngine implements CatEngine
      */
     protected function buildUrl($url)
     {
-        return $this->endpoint . '/' . $this->getVersion() . '/' . $url;
+        $version = $this->getVersion();
+
+        return empty($version)
+            ? $this->endpoint . '/'. $url
+            : $this->endpoint . '/' . $version . '/' . $url;
     }
 
     /**

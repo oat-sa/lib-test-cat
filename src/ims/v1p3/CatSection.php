@@ -19,8 +19,8 @@
 
 namespace oat\libCat\ims\v1p3;
 
-use oat\libCat\CatEngine as CatEngineInterface;
 use oat\libCat\AbstractCatSection;
+use oat\libCat\CatEngine as CatEngineInterface;
 use oat\libCat\exception\CatEngineException;
 use function GuzzleHttp\json_decode;
 
@@ -34,31 +34,57 @@ class CatSection extends AbstractCatSection
 
     /**
      * CatSection constructor.
-     * @param CatEngine $engine
-     * @param $settings
-     * @param string $qtiUsageData
-     * @param string $qtiMetaData
-     * @param string $sectionId
+     *
+     * @param CatEngineInterface $engine
+     * @param                    $settings
+     * @param string             $qtiUsageData
+     * @param string             $qtiMetaData
+     * @param string             $sectionId
+     *
+     * @throws CatEngineException
      */
-    public function __construct(CatEngineInterface $engine, $settings, $qtiUsageData = null, $qtiMetaData = null, $sectionId = null)
-    {
+    public function __construct(
+        CatEngineInterface $engine,
+        $settings,
+        $qtiUsageData = null,
+        $qtiMetaData = null,
+        $sectionId = null
+    ) {
         parent::__construct($engine, $settings, $qtiUsageData, $qtiMetaData);
-        $this->sectionId = $sectionId;
-        if ($this->sectionId === null) {
-            $result = $this->engine->call(
-                'sections',
-                'POST',
-                json_encode([
-                    "qtiMetadata" => base64_encode($qtiMetaData),
-                    "qtiUsagedata" => base64_encode($qtiUsageData),
+
+        $this->sectionId = is_null($sectionId)
+            ? $this->requestSectionIdentifier($settings, $qtiMetaData, $qtiUsageData)
+            : $sectionId;
+    }
+
+    /**
+     * @param        $settings
+     * @param string $qtiMetaData
+     * @param string $qtiUsageData
+     *
+     * @return string
+     *
+     * @throws CatEngineException
+     */
+    private function requestSectionIdentifier($settings, $qtiMetaData, $qtiUsageData)
+    {
+        $result = $this->engine->call(
+            'sections',
+            'POST',
+            json_encode(
+                [
+                    "qtiMetadata"          => base64_encode($qtiMetaData),
+                    "qtiUsagedata"         => base64_encode($qtiUsageData),
                     "sectionConfiguration" => base64_encode($settings)
-                ])
-            );
-            if (!isset($result['sectionIdentifier']) || !is_numeric($result['sectionIdentifier'])) {
-                throw new CatEngineException('Unable create CatSection');
-            }
-            $this->sectionId = $result['sectionIdentifier'];
+                ]
+            )
+        );
+
+        if (empty($result['sectionIdentifier'])) {
+            throw new CatEngineException('Unable create CatSection. Section identifier is not defined');
         }
+
+        return $result['sectionIdentifier'];
     }
 
     /**

@@ -20,7 +20,6 @@
 namespace oat\libCat;
 
 use GuzzleHttp\ClientInterface;
-use oat\libCat\CatEngine;
 use oat\libCat\exception\CatEngineConnectivityException;
 use oat\libCat\exception\CatEngineException;
 
@@ -43,14 +42,14 @@ abstract class AbstractCatEngine implements CatEngine
     /**
      * Setup the cat engine
      *
-     * @param string $endpoint URL of the service
-     * @param $version
+     * @param string          $endpoint URL of the service.
+     * @param string          $version  In case if version is not defined, put value considered as empty string (''|null|false).
      * @param ClientInterface $client
      */
     public function __construct($endpoint, $version, ClientInterface $client)
     {
         $this->endpoint = rtrim($endpoint, '/');
-        $this->version = $version;
+        $this->version = (string)$version;
         $this->client = $client;
     }
 
@@ -123,7 +122,11 @@ abstract class AbstractCatEngine implements CatEngine
      */
     protected function buildUrl($url)
     {
-        return $this->endpoint . '/' . $this->getVersion() . '/' . $url;
+        $version = $this->getVersion();
+
+        return empty($version)
+            ? $this->endpoint . '/'. $url
+            : $this->endpoint . '/' . $version . '/' . $url;
     }
 
     /**

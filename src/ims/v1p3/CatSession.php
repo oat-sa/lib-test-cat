@@ -196,16 +196,6 @@ class CatSession implements CatSessionInterface
          * Workaround to move item related variables to ItemResults from TestResult
          */
         if (is_array($result['testResult'])) {
-            foreach ($result['testResult'] as $variableType => $variables) {
-                if (!empty($variables)) {
-                    foreach ($variables as $key => $misLocatedVariable) {
-                        if (strpos($misLocatedVariable['identifier'], 'CURRENT_') === 0) {
-                            $result['itemResults'][$variableType][] = $misLocatedVariable;
-                            unset($result['testResult'][$variableType][$key]);
-                        }
-                    }
-                }
-            }
             $this->testResult = new TestResult($this->restoreVariables($result['testResult']));
         } else {
             $this->testResult = [];

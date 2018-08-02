@@ -32,7 +32,7 @@ class CatEngineConnectivityException extends CatEngineException
     public function __construct($message = "", $code = 0, \Exception $previous = null)
     {
         if ($message == "") {
-            $message = 'Connection to Computer Adaptive Testing engine cannot be established.';
+            $message = __('Connection to Computer Adaptive Testing engine cannot be established.');
         }
         parent::__construct($message, $code, $previous);
     }

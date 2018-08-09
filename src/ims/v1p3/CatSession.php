@@ -89,11 +89,12 @@ class CatSession implements CatSessionInterface
     public function getTestMap($results = [])
     {
         if (!empty($results) && $this->sessionState !== null) {
-            $context = [];
+            $itemResult = [array_pop($results)];
+
             $requestData = ResultFormatter::formatResultData([
                 'assessmentResult' => [
                     'context' => $this->context,
-                    'itemResult' => $this->filterItemResults($results),
+                    'itemResult' => $this->filterItemResults($itemResult),
                 ],
                 'sessionState' => $this->sessionState
             ]);

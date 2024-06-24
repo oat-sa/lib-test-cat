@@ -24,7 +24,6 @@
 		"GPL-2.0"
 	],
 	"require" : {
-		"php" : ">=5.3.10",
 		"guzzlehttp/guzzle" : "~7.0"
 	},
     "autoload" : {
